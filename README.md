@@ -2,7 +2,7 @@
 
 ## Descrição do Projeto
 
-Este repositório contém a implementação de um jogo de Batalha Naval em Assembly 8086, desenvolvido para rodar no ambiente DOS usando MASM/TASM. O jogo permite que dois jogadores posicionem seus navios em uma grade e alternem ataques até que todos os navios de um dos jogadores sejam afundados.
+Este repositório contém a implementação de um jogo de Batalha Naval em Assembly 8086, desenvolvido para rodar no ambiente DOS usando MASM/TASM. O jogo permite que um jogador posicione seus navios e ataque o de seu openente que é controlado pelo computador. Ganha quem derrubar todas embarcações inimigas primeiro
 
 ## Desafios
 
