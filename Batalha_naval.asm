@@ -370,6 +370,7 @@ Imprime_tabuleiro endp
 
 pega_Posicao proc                                                       ;Procedimento para pegar a posicao que o jogador deseja posicionar suas embarcacoes
     ;Tem que passar cx com a quantidade de vezes que quer rodar
+                            push_all
                             xor              dx,dx
                             mov              dx,6                       ;Valores para o posicionamento das mensagens na tela
     loop_Inteiro:           
@@ -389,7 +390,6 @@ pega_Posicao proc                                                       ;Procedi
                             mov              cx,2                       ;Atualiza o cx para pegar as duas cordenadas desejadas
                             lea              di,posicao_Desejada        ;Passa a posicao de memoria para di de onde vamos armazenar as cordenadas
                             move_XY          14,dl                      ;Posiciona o cursor
-
     loop_Pega_Posicao:      
 
                             mov              ah,1
@@ -406,16 +406,37 @@ pega_Posicao proc                                                       ;Procedi
 
                             loop             loop_Inteiro               ;Loop para pegar todas as posicoes necessarias para embarcacao
 
+                            pop_all
                             ret                                         ;Retorna para onde estava
 pega_Posicao endp
 
 decifra_Posicao proc
+                            push_all
+                            xor dx, dx
+                            lea si, posicao_Desejada
+                            sub byte ptr [si], 38h
+                            mov ah, 2
+                            mov dl, [si]
+                            int 21h
+                            add bl, [si]
+                            inc si
+                            sub byte ptr [si], 30h
+                            add bl, [si]
+                            mov dx, bx
+                            int 21h
+
+                            mov si, bx
+                            add matriz_Controle_Jogador[si], 1
+                            mov dl, matriz_Controle_Jogador[si]
+                            int 21h
+                            pop_all
 
 
                             ret
 decifra_Posicao endp
 
 posiciona_Navios proc
+                            push_all
 
                             move_XY          20,0
                             lea              si,msgcomecapegar
@@ -439,6 +460,7 @@ posiciona_Navios proc
                             mov              cx,4                       ;Passar quantas posicoes precisao ser pegas
                             call             pega_Posicao
 
+                            pop_all
 
                             ret
 posiciona_Navios endp
