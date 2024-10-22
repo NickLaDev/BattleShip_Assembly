@@ -62,7 +62,8 @@ endm
     MSGPEGARNOME               db "Digite o seu nome: $"
     MSGCOMECAPEGAR             db "Comece digitando a posicao do ENCOURADO: $"
     MSGLEMBRESE1               db "Lembre-se o encourado ocupa 4 posicoes, como a seguir: $"
-    MSGPEGAPOSICAO             db "Digite a posicao desejada & para embarcacao:!$"                                                                                                                           ;&=padrao estabelecido para quebra de linhas na funcao de imprir criada
+    MSGPEGAPOSICAO             db "Digite a posicao desejada$"
+    MSGPEGAPOSICAO2            db "para embarcacao:$"                                                                                                                                                        ;&=padrao estabelecido para quebra de linhas na funcao de imprir criada
     ;--------------------------------------Declaracao das matrizes que serao utilizadas como tabuleiro-------------------------------------------------------------------------------------;
     matriz_Jogador             db 10 dup (9 dup (0))
     matriz_Adversario          db 10 dup (9 dup(0))
@@ -78,6 +79,7 @@ endm
     ;--------------------------------------Variaveis de ambiente-------------------------------------------------------------------------------------------------------------------;
 
     nome_Jogador               db 15 dup (?)
+    posicao_Desejada           db ?,?
 
     ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------;
 .code
@@ -130,6 +132,7 @@ limpa_Tela endp
     ;------------------------------------------------------------------------------------------------------------------------------------;
 imprime_Letras proc                                                     ;Procedimento para impressao de caracters
     ;Necessário enviar BL e si ( BL = cor e si = endereço do caracter )
+    ;O caracter & sera reconhecido como um comando para quebrar linha
 
                             push_all
 
@@ -138,6 +141,9 @@ imprime_Letras proc                                                     ;Procedi
 
     impressao_Loop:         
 
+                            cmp              dl,"&"
+                            je               pular_Impressao
+                            
                             mov              al,[si]
                             MOV              AH, 09h                    ; Função para escrever caractere e atributo
                             MOV              CX, 1                      ; Número de vezes para escrever o caractere
@@ -152,8 +158,23 @@ imprime_Letras proc                                                     ;Procedi
                             inc              si
                             mov              dl,[si]
                             cmp              dl,"$"
-                            jnz              impressao_Loop             ;Compara para ver se já terminou a string
+                            jz               fim_Impressao_Letra        ;Compara para ver se já terminou a
+                            jmp              impressao_Loop
 
+    pular_Impressao:        
+
+                            inc              si
+                            call             pula_Linha
+                            mov              dl,[si]
+                            cmp              dl,"$"
+                            jz               fim_Impressao_Letra        ;Compara para ver se já terminou a
+                            jmp              impressao_Loop
+                            
+
+
+
+    fim_Impressao_Letra:    
+                            
                             call             pula_Linha                 ;Passa para a próxima linha dps da impressao
 
                             pop_all
@@ -347,6 +368,53 @@ Imprime_tabuleiro proc
 
 Imprime_tabuleiro endp
 
+pega_Posicao proc                                                       ;Procedimento para pegar a posicao que o jogador deseja posicionar suas embarcacoes
+    ;Tem que passar cx com a quantidade de vezes que quer rodar
+                            xor              dx,dx
+                            mov              dx,6                       ;Valores para o posicionamento das mensagens na tela
+    loop_Inteiro:           
+
+                            lea              si,msgpegaposicao
+                            move_XY          2,dl
+                            inc              dx
+                            call             imprime_Letras             ;Imprime a primeira parte da mensagem
+
+                            lea              si,msgpegaposicao2
+                            move_XY          7,dl
+                            call             imprime_Letras             ;Quebra linha e imprime a segunda parte
+                            inc              dx
+
+                            
+                            push             cx                         ;Guarda o cx antigo
+                            mov              cx,2                       ;Atualiza o cx para pegar as duas cordenadas desejadas
+                            lea              di,posicao_Desejada        ;Passa a posicao de memoria para di de onde vamos armazenar as cordenadas
+                            move_XY          14,dl                      ;Posiciona o cursor
+
+    loop_Pega_Posicao:      
+
+                            mov              ah,1
+                            int              21h                        ;Salva em AL o que foi digitado pelo usuario
+
+                            mov              [di],al
+                            inc              di                         ;Passa para a variavel a posicao inserida
+
+                            loop             loop_Pega_Posicao          ;Roda duas vezes
+                            pop              cx                         ;Volta para o cx antigo
+                            inc              dx                         ;Atualiza a posicao do cursor
+
+                            call             decifra_Posicao            ;Decifra qual posicao da matriz tem que ser alterada
+
+                            loop             loop_Inteiro               ;Loop para pegar todas as posicoes necessarias para embarcacao
+
+                            ret                                         ;Retorna para onde estava
+pega_Posicao endp
+
+decifra_Posicao proc
+
+
+                            ret
+decifra_Posicao endp
+
 posiciona_Navios proc
 
                             move_XY          20,0
@@ -367,11 +435,10 @@ posiciona_Navios proc
                             desenha_Quadrado dl,2
                             add              dx,3
                             loop             loop_Desenha_Encourado
-                        
-                            lea              dx,msgpegaposicao
-                            move_XY          0,6
-                            mov              ah,9
-                            int              21h
+    ;
+                            mov              cx,4                       ;Passar quantas posicoes precisao ser pegas
+                            call             pega_Posicao
+
 
                             ret
 posiciona_Navios endp
