@@ -67,9 +67,9 @@ endm
     ;--------------------------------------Declaracao das matrizes que serao utilizadas como tabuleiro-------------------------------------------------------------------------------------;
     matriz_Jogador             db 10 dup (9 dup (0))
     matriz_Adversario          db 10 dup (9 dup(0))
-    matriz_Controle_Jogador    db 10 dup (9 dup (0))
+    matriz_Controle_Jogador    db 10 dup (9 dup (30h)),"$"
     matriz_Controle_Adversario db 10 dup (9 dup (0))
-    colunas                    db "[1] [2] [3] [4] [5] [6] [7] [8] [9] [10] $"
+    colunas                    db "[0] [1] [2] [3] [4] [5] [6] [7] [8] [9] $"
     linhas                     db "A B C D E F G H I$"
     DIV_1                      DB 218,196,196,196,194,196,196,196,194,196,196,196,194,196,196,196,194,196,196,196,194,196,196,196,194,196,196,196,194,196,196,196,194,196,196,196,194,196,196,196,191,"$"    ;Usando codigos ASCII para impressao
     DIV_2                      DB 192,196,196,196,193,196,196,196,193,196,196,196,193,196,196,196,193,196,196,196,193,196,196,196,193,196,196,196,193,196,196,196,193,196,196,196,193,196,196,196,217,"$"    ;das matrizes utilizadas no jogo
@@ -400,6 +400,11 @@ pega_Posicao proc                                                          ;Proc
                             inc              di                            ;Passa para a variavel a posicao inserida
 
                             loop             loop_Pega_Posicao             ;Roda duas vezes
+
+
+    ;Posicao desejada contem a posicao que o jogador inseriu, verificar se a posicao é possivel
+
+
                             pop              cx                            ;Volta para o cx antigo
                             inc              dx                            ;Atualiza a posicao do cursor
 
@@ -415,7 +420,7 @@ decifra_Posicao proc
                             push_all
 
                             xor              ax,ax
-                            mov              ax,10                         ;Coluna vale como 10 posicoes
+                            mov              al,10                         ;Coluna vale como 10 posicoes
                             
                             lea              si, posicao_Desejada          ;Passa o endereço da variavel
                             sub              byte ptr [si], 65             ;Trasforma a letra para o numero corespondente da linha desejada
@@ -423,7 +428,7 @@ decifra_Posicao proc
                             mul              byte ptr [si]                 ;Coluna conta como 10 posicoes
                             
                             inc              si
-                            sub              byte ptr [si],49              ;Transforma o caracter do numero para apenas o numero
+                            sub              byte ptr [si],48              ;Transforma o caracter do numero para apenas o numero
 
                             add              ax,[si]                       ; Salva em AX a multipliacap de [si+1] com [si] (salvo em ax anteriormente)
 
@@ -431,25 +436,9 @@ decifra_Posicao proc
                             add              di,ax                         ;Passa para a matriz o valor 1 na posicao desejada
                             mov              byte ptr [di],1
                             
-                           
-                            call             limpa_Tela
-                            xor              cx,cx
-                            mov              cx,90
-    teste_impressao:        
 
-                            loop             teste_impressao
-                           
-                           
                             lea              si,matriz_Controle_Jogador    ;Passa como parametro para o procedimento a matriz que tem q ser impressa
                             call             posiciona_Posicao
-
-    ;precisa fazer: Testar se a posição é válida
-    ;precisa fazer: imprimir no tabuleiro
-
-    ;move_XY          37,6                          ; Para baixo = add 2 Para lado = add 4
-    ;mov              ah,2
-    ;mov              dl,"1"
-    ;int              21h
 
                             pop_all
 
@@ -470,9 +459,11 @@ posiciona_Posicao proc                                                     ;Tem 
                             je               fim_1
                             inc              cx
 
-                            cmp              byte ptr [si],1
+                            xor              dx,dx
+                            mov              dl,[si]
                             inc              si
-                            jnz              roda_Matriz                   ;-> virar call
+                            cmp              dl,1
+                            jne              roda_Matriz                   ;-> virar call
                             
                             call             imprime_Posicao
 
@@ -487,41 +478,34 @@ posiciona_Posicao endp
 
 imprime_Posicao proc
 
-                            push             cx
+
+                            push_all
 
                             
                             xor              ax,ax
                             xor              dx,dx                         ;Limpa registradores
 
+                            dec              cx
                             mov              al,cl
 
-                            move_XY          al,al
-                            mov              ah,2
-                            mov              dl,"1"
-                            int              21h
-
                             mov              cl,10
-                            div              cl                            ;Divide AX por Cx e salva resultado em AL e resto em AH
-                            
-                            move_XY          ah,ah
-                            mov              ah,2
-                            mov              dl,"1"
-                            int              21h
-
-                            
-                            xor              cx,cx
+                            div              cl                            ;Divide Al por Cl e salva resultado em AL e resto em AH
                             xor              bx,bx
-                            mov              bl,ah
+                            mov              bl,ah                         ;salva em BL o resto
+
+                            xor              dx,dx
                             mov              cl,2
                             mul              cl
-                            mov              dx,ax                         ;Multiplica o resultado por 2 dando a quantidade de linhas para baixo
+                            push             ax                            ;Multiplica o resultado por 2 dando a quantidade de linhas para baixo
 
-
+                            xor              ax,ax
                             mov              al,bl
-                            mov              ch,4
-                            mul              ch
+                            mov              cl,4
+                            mul              cl
                             xor              bx,bx                         ;Multiplica o resto por 4 para dar a quantidade de colunas para o lado
                             mov              bx,ax
+
+                            pop              dx
 
                             add              dx,6
                             add              bx,37
@@ -534,9 +518,8 @@ imprime_Posicao proc
                             mov              dl,"1"
                             int              21h
 
-                            pop              cx
-                            inc              si
-                            inc              cx
+                            pop_all
+
 
                             ret
 
@@ -563,9 +546,12 @@ posiciona_Navios proc
                             desenha_Quadrado dl,2
                             add              dx,3
                             loop             loop_Desenha_Encourado
-    ;
+    
                             mov              cx,4                          ;Passar quantas posicoes precisao ser pegas
                             call             pega_Posicao
+
+
+    ; fazer verificar se a posicao pe valida
 
                             pop_all
 
