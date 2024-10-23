@@ -431,12 +431,116 @@ decifra_Posicao proc
                             add              di,ax                         ;Passa para a matriz o valor 1 na posicao desejada
                             mov              byte ptr [di],1
                             
+                           
+                            call             limpa_Tela
+                            xor              cx,cx
+                            mov              cx,90
+    teste_impressao:        
+
+                            loop             teste_impressao
+                           
+                           
+                            lea              si,matriz_Controle_Jogador    ;Passa como parametro para o procedimento a matriz que tem q ser impressa
+                            call             posiciona_Posicao
+
+    ;precisa fazer: Testar se a posição é válida
+    ;precisa fazer: imprimir no tabuleiro
+
+    ;move_XY          37,6                          ; Para baixo = add 2 Para lado = add 4
+    ;mov              ah,2
+    ;mov              dl,"1"
+    ;int              21h
 
                             pop_all
 
 
                             ret
 decifra_Posicao endp
+
+posiciona_Posicao proc                                                     ;Tem que receber em si o endereço da matriz
+
+                            push_all
+
+                            xor              cx,cx
+                            mov              cx,0
+
+    roda_Matriz:            
+
+                            cmp              cx,90
+                            je               fim_1
+                            inc              cx
+
+                            cmp              byte ptr [si],1
+                            inc              si
+                            jnz              roda_Matriz                   ;-> virar call
+                            
+                            call             imprime_Posicao
+
+                            jmp              roda_Matriz
+
+
+    fim_1:                  
+                            pop_all
+                            ret
+
+posiciona_Posicao endp
+
+imprime_Posicao proc
+
+                            push             cx
+
+                            
+                            xor              ax,ax
+                            xor              dx,dx                         ;Limpa registradores
+
+                            mov              al,cl
+
+                            move_XY          al,al
+                            mov              ah,2
+                            mov              dl,"1"
+                            int              21h
+
+                            mov              cl,10
+                            div              cl                            ;Divide AX por Cx e salva resultado em AL e resto em AH
+                            
+                            move_XY          ah,ah
+                            mov              ah,2
+                            mov              dl,"1"
+                            int              21h
+
+                            
+                            xor              cx,cx
+                            xor              bx,bx
+                            mov              bl,ah
+                            mov              cl,2
+                            mul              cl
+                            mov              dx,ax                         ;Multiplica o resultado por 2 dando a quantidade de linhas para baixo
+
+
+                            mov              al,bl
+                            mov              ch,4
+                            mul              ch
+                            xor              bx,bx                         ;Multiplica o resto por 4 para dar a quantidade de colunas para o lado
+                            mov              bx,ax
+
+                            add              dx,6
+                            add              bx,37
+
+                            move_XY          bl,dl
+
+                            xor              ax,ax
+                            mov              ah,2
+                            xor              dx,dx
+                            mov              dl,"1"
+                            int              21h
+
+                            pop              cx
+                            inc              si
+                            inc              cx
+
+                            ret
+
+imprime_Posicao endp
 
 posiciona_Navios proc
                             push_all
