@@ -56,6 +56,7 @@ endm
     MSGINTRO8                  db "O jogador deve posicionar cada embarcacao com uma distancia minima de uma casa $"
     MSGINTRO9                  db "Ganha quem acertar o todos os navios do openente $"
     MSGINTRO10                 db "Pressione qualquer tecla para continuar! $"
+    MSGINVALIDO                db "A posicao digitada eh invalida. $"
 
     quebra_Linha               db 10,13,"$"
     ;------------------------------------------Mensagens-------------------------------------------------------------------------------------------------;
@@ -81,7 +82,7 @@ endm
     nome_Jogador               db 15 dup (?)
     posicao_Desejada           db ?,?
     posicao_Desejada_Decifrada db ?,"$"
-
+    posicao_anterior           dw 0
     ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------;
 .code
 
@@ -408,6 +409,7 @@ pega_Posicao proc                                                          ;Proc
                             pop              cx                            ;Volta para o cx antigo
                             inc              dx                            ;Atualiza a posicao do cursor
 
+
                             call             decifra_Posicao               ;Decifra qual posicao da matriz tem que ser alterada
 
                             loop             loop_Inteiro                  ;Loop para pegar todas as posicoes necessarias para embarcacao
@@ -415,6 +417,41 @@ pega_Posicao proc                                                          ;Proc
                             pop_all
                             ret                                            ;Retorna para onde estava
 pega_Posicao endp
+
+verifica_Posicao proc                                                      ;DI vai chegar com os valor da posicao absoluta atual digitada
+    ;posicao_Anterior guarda a posicao absoluta anterior (tudo em offset)
+
+                            push_all
+
+                            xor              dx,dx
+                            mov              dx,posicao_Anterior
+
+
+                            inc              dx
+                            cmp              dx,di
+                            jz               posicao_Aprovada
+
+                            sub              dx,2
+                            cmp              dx,di
+                            jz               posicao_Aprovada
+
+                            add              dx,11
+                            cmp              dx,di
+                            jz               posicao_Aprovada
+
+                            sub              dx,20
+                            cmp              dx,di
+                            jz               posicao_Aprovada
+
+    ;Passou aqui -> posicao rejeitada
+
+
+
+                            pop_all
+    posicao_Aprovada:       
+                            ret
+verifica_Posicao endp
+
 
 decifra_Posicao proc
                             push_all
@@ -434,15 +471,31 @@ decifra_Posicao proc
 
                             lea              di,matriz_Controle_Jogador
                             add              di,ax                         ;Passa para a matriz o valor 1 na posicao desejada
+
+                            call             verifica_Posicao
+                            jnz              errado
+
                             mov              byte ptr [di],1
                             
+                            mov              posicao_anterior, di
 
                             lea              si,matriz_Controle_Jogador    ;Passa como parametro para o procedimento a matriz que tem q ser impressa
                             call             posiciona_Posicao
 
+                            jmp              final
+    errado:                 
+                            lea              si, MSGINVALIDO
+                            mov              ah, 3
+                            int              10h
+                            inc              dh
+                            move_XY          2, dh
+                            call             imprime_Letras
                             pop_all
+                            inc              cx
+                            ret
 
-
+    final:                  
+                            pop_all
                             ret
 decifra_Posicao endp
 
