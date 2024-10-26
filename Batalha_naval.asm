@@ -82,7 +82,8 @@ endm
     nome_Jogador               db 15 dup (?)
     posicao_Desejada           db ?,?
     posicao_Desejada_Decifrada db ?,"$"
-    posicao_anterior           dw 0
+    posicao_anterior           dw ?
+    cx_inicial                 dw ?
     ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------;
 .code
 
@@ -375,6 +376,7 @@ pega_Posicao proc                                                          ;Proc
                             push_all
                             xor              dx,dx
                             mov              dx,6                          ;Valores para o posicionamento das mensagens na tela
+                            mov              cx_inicial,cx
     loop_Inteiro:           
 
                             lea              si,msgpegaposicao
@@ -406,10 +408,12 @@ pega_Posicao proc                                                          ;Proc
     ;Posicao desejada contem a posicao que o jogador inseriu, verificar se a posicao é possivel
 
 
+
+
                             pop              cx                            ;Volta para o cx antigo
                             inc              dx                            ;Atualiza a posicao do cursor
 
-
+    ;cx chega aqui com qual vez esta rodando
                             call             decifra_Posicao               ;Decifra qual posicao da matriz tem que ser alterada
 
                             loop             loop_Inteiro                  ;Loop para pegar todas as posicoes necessarias para embarcacao
@@ -422,6 +426,9 @@ verifica_Posicao proc                                                      ;DI v
     ;posicao_Anterior guarda a posicao absoluta anterior (tudo em offset)
 
                             push_all
+
+                            cmp              cx,cx_inicial
+                            je               posicao_Aprovada              ;Primeira vez que está rodando, então nao precisa verficar
 
                             xor              dx,dx
                             mov              dx,posicao_Anterior
@@ -447,9 +454,11 @@ verifica_Posicao proc                                                      ;DI v
 
 
 
-                            pop_all
+                           
     posicao_Aprovada:       
+                            pop_all
                             ret
+
 verifica_Posicao endp
 
 
@@ -484,10 +493,10 @@ decifra_Posicao proc
 
                             jmp              final
     errado:                 
+    ;call             pula_Linha
                             lea              si, MSGINVALIDO
                             mov              ah, 3
                             int              10h
-                            inc              dh
                             move_XY          2, dh
                             call             imprime_Letras
                             pop_all
