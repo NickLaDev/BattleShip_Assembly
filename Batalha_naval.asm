@@ -82,8 +82,7 @@ endm
     nome_Jogador               db 15 dup (?)
     posicao_Desejada           db ?,?
     posicao_Desejada_Decifrada db ?,"$"
-    posicao_anterior           dw ?
-    cx_inicial                 dw ?
+    posicao_anterior           dw 0
     ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------;
 .code
 
@@ -413,7 +412,7 @@ pega_Posicao proc                                                          ;Proc
                             pop              cx                            ;Volta para o cx antigo
                             inc              dx                            ;Atualiza a posicao do cursor
 
-    ;cx chega aqui com qual vez esta rodando
+
                             call             decifra_Posicao               ;Decifra qual posicao da matriz tem que ser alterada
 
                             loop             loop_Inteiro                  ;Loop para pegar todas as posicoes necessarias para embarcacao
@@ -464,7 +463,7 @@ verifica_Posicao endp
 
 decifra_Posicao proc
                             push_all
-
+;cx com quantas vezes ja rdou
                             xor              ax,ax
                             mov              al,10                         ;Coluna vale como 10 posicoes
                             
