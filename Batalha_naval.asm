@@ -61,14 +61,16 @@ endm
     quebra_Linha               db 10,13,"$"
     ;------------------------------------------Mensagens-------------------------------------------------------------------------------------------------;
     MSGPEGARNOME               db "Digite o seu nome: $"
-    MSGCOMECAPEGAR             db "Comece digitando a posicao do ENCOURADO: $"
+    MSGENCOURADO               db "Comece digitando a posicao do ENCOURADO: $"
+    MSGFRAGATA                 db "Digite a posicao do FRAGATA: $"
     MSGLEMBRESE1               db "Lembre-se o encourado ocupa 4 posicoes, como a seguir: $"
+    MSGLEMBRESE_FRAGATA        db "Lembre-se, o fragata ocupa 3 posicoes como a seguir: $"
     MSGPEGAPOSICAO             db "Digite a posicao desejada$"
     MSGPEGAPOSICAO2            db "para embarcacao:$"                                                                                                                                                        ;&=padrao estabelecido para quebra de linhas na funcao de imprir criada
     ;--------------------------------------Declaracao das matrizes que serao utilizadas como tabuleiro-------------------------------------------------------------------------------------;
     matriz_Jogador             db 10 dup (9 dup (0))
     matriz_Adversario          db 10 dup (9 dup(0))
-    matriz_Controle_Jogador    db 10 dup (9 dup (30h)),"$"
+    matriz_Controle_Jogador    db 10 dup (9 dup (0)),"$"
     matriz_Controle_Adversario db 10 dup (9 dup (0))
     colunas                    db "[0] [1] [2] [3] [4] [5] [6] [7] [8] [9] $"
     linhas                     db "A B C D E F G H I$"
@@ -83,6 +85,7 @@ endm
     posicao_Desejada           db ?,?
     posicao_Desejada_Decifrada db ?,"$"
     posicao_anterior           dw 0
+    cx_inicial                 dw ?
     ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------;
 .code
 
@@ -108,6 +111,10 @@ main proc
                             call             Imprime_tabuleiro             ;Começa a posiconar os navios
 
                             call             posiciona_Navios
+
+
+
+    ;call             matriz_Computador             ;faz com que o computador crie uma matriz de controle para jogar contra o player
     
     ;---------------------------------FIM_DO_PROGRAMA--------------------------------------------------------------------------------------;
     
@@ -463,7 +470,7 @@ verifica_Posicao endp
 
 decifra_Posicao proc
                             push_all
-;cx com quantas vezes ja rdou
+    ;cx com quantas vezes ja rdou
                             xor              ax,ax
                             mov              al,10                         ;Coluna vale como 10 posicoes
                             
@@ -590,7 +597,7 @@ posiciona_Navios proc
                             push_all
 
                             move_XY          20,0
-                            lea              si,msgcomecapegar
+                            lea              si,MSGENCOURADO
                             mov              bl,0Bh
                             call             imprime_Letras
 
@@ -611,6 +618,30 @@ posiciona_Navios proc
                             mov              cx,4                          ;Passar quantas posicoes precisao ser pegas
                             call             pega_Posicao
 
+                            call             limpa_Tela
+
+                            move_XY          24,1
+                            lea              si,MSGFRAGATA
+                            mov              bl,0Bh
+                            call             imprime_Letras
+
+                            move_XY          14,2
+                            lea              si,MSGLEMBRESE_FRAGATA
+                            mov              bl,0Fh
+                            call             imprime_Letras
+                            
+                            mov              cx,3
+                            xor              dx,dx
+                            mov              dx,34
+    loop_Desenha_Fragata:   
+                            desenha_Quadrado dl, 3
+                            add              dx,3
+                            loop             loop_Desenha_Fragata
+
+                            call             Imprime_tabuleiro
+
+                            mov              cx,3
+                            call             pega_Posicao
 
     ; fazer verificar se a posicao pe valida
 
@@ -618,6 +649,7 @@ posiciona_Navios proc
 
                             ret
 posiciona_Navios endp
+
 
     fim:                    
                             mov              ah,4ch
