@@ -431,10 +431,49 @@ pega_Posicao proc                                                          ;Proc
                             ret                                            ;Retorna para onde estava
 pega_Posicao endp
 
-verifica_Posicao proc                                                      ;DI vai chegar com os valor da posicao absoluta atual digitada
+verifica_Posicao proc
+                            push_all
+                            xor              dx, dx
+                            mov              bx,di
+                            sub              bx,11
+                            add              dl,[bx]
+
+                            inc              bx
+                            add              dl,[bx]
+
+                            inc              bx
+                            add              dl,[bx]
+
+                            add              bx,8
+                            add              dl,[bx]
+
+                            add              bx, 2
+                            add              dl,[bx]
+
+                            add              bx,8
+                            add              dl,[bx]
+
+                            inc              bx
+                            add              dl,[bx]
+
+                            inc              bx
+                            add              dl,[bx]
+
+                            cmp              cx,cx_inicial
+                            jz               um
+
+                            cmp              dx,1
+                            jnz              posicao_Aprovada
+                            jmp              liberado
+
+    um:                     
+                            cmp              dx,0
+                            jnz              posicao_Aprovada
+
+    liberado:               
+    ;DI vai chegar com os valor da posicao absoluta atual digitada
     ;posicao_Anterior guarda a posicao absoluta anterior (tudo em offset)
 
-                            push_all
 
                             cmp              cx,cx_inicial
                             je               posicao_Aprovada              ;Primeira vez que está rodando, então nao precisa verficar
@@ -458,7 +497,6 @@ verifica_Posicao proc                                                      ;DI v
                             sub              dx,20
                             cmp              dx,di
                             jz               posicao_Aprovada
-
     ;Passou aqui -> posicao rejeitada
 
 
