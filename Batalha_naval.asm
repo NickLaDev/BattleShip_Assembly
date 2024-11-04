@@ -63,8 +63,10 @@ endm
     MSGPEGARNOME               db "Digite o seu nome: $"
     MSGENCOURADO               db "Comece digitando a posicao do ENCOURADO: $"
     MSGFRAGATA                 db "Digite a posicao do FRAGATA: $"
+    MSGSUBMARINO               db "Digite a posicao do SUBMARINO: $"
     MSGLEMBRESE1               db "Lembre-se o encourado ocupa 4 posicoes, como a seguir: $"
     MSGLEMBRESE_FRAGATA        db "Lembre-se, o fragata ocupa 3 posicoes como a seguir: $"
+    MSGLEMBRESE_SUBMARINO      db "Lembre-se, o Subamarino ocupa 2 posicoes, como a seguir: $"
     MSGPEGAPOSICAO             db "Digite a posicao desejada$"
     MSGPEGAPOSICAO2            db "para embarcacao:$"                                                                                                                                                        ;&=padrao estabelecido para quebra de linhas na funcao de imprir criada
     ;--------------------------------------Declaracao das matrizes que serao utilizadas como tabuleiro-------------------------------------------------------------------------------------;
@@ -395,7 +397,8 @@ pega_Posicao proc                                                          ;Proc
                             call             imprime_Letras                ;Quebra linha e imprime a segunda parte
                             inc              dx
 
-                            
+    ;IMRPIMIU AS MSGS
+
                             push             cx                            ;Guarda o cx antigo
                             mov              cx,2                          ;Atualiza o cx para pegar as duas cordenadas desejadas
                             lea              di,posicao_Desejada           ;Passa a posicao de memoria para di de onde vamos armazenar as cordenadas
@@ -618,6 +621,8 @@ posiciona_Navios proc
                             mov              cx,4                          ;Passar quantas posicoes precisao ser pegas
                             call             pega_Posicao
 
+    ;COMEÇA PROXIMO NAVIO
+
                             call             limpa_Tela
 
                             move_XY          24,1
@@ -639,9 +644,79 @@ posiciona_Navios proc
                             loop             loop_Desenha_Fragata
 
                             call             Imprime_tabuleiro
+                            lea              si,matriz_Controle_Jogador    ;Passa como parametro para o procedimento a matriz que tem q ser impressa
+                            call             posiciona_Posicao
+
+                            
 
                             mov              cx,3
                             call             pega_Posicao
+
+    ;Proximo (Submarino = 2x)
+
+
+                            call             limpa_Tela
+
+                            move_XY          24,1
+                            lea              si,MSGSUBMARINO
+                            mov              bl,0Bh
+                            call             imprime_Letras
+
+                            move_XY          14,2
+                            lea              si,MSGLEMBRESE_SUBMARINO
+                            mov              bl,0Fh
+                            call             imprime_Letras
+                            
+                            mov              cx,2
+                            xor              dx,dx
+                            mov              dx,34
+    loop_Desenha_Submarino1:
+                            desenha_Quadrado dl, 3
+                            add              dx,3
+                            loop             loop_Desenha_Submarino1
+
+                            call             Imprime_tabuleiro
+                            lea              si,matriz_Controle_Jogador    ;Passa como parametro para o procedimento a matriz que tem q ser impressa
+                            call             posiciona_Posicao
+
+                            
+
+                            mov              cx,2
+                            call             pega_Posicao
+
+
+
+                            call             limpa_Tela
+
+                            move_XY          24,1
+                            lea              si,MSGSUBMARINO
+                            mov              bl,0Bh
+                            call             imprime_Letras
+
+                            move_XY          14,2
+                            lea              si,MSGLEMBRESE_SUBMARINO
+                            mov              bl,0Fh
+                            call             imprime_Letras
+                            
+                            mov              cx,2
+                            xor              dx,dx
+                            mov              dx,34
+    loop_Desenha_Submarino2:
+                            desenha_Quadrado dl, 3
+                            add              dx,3
+                            loop             loop_Desenha_Submarino2
+
+                            call             Imprime_tabuleiro
+                            lea              si,matriz_Controle_Jogador    ;Passa como parametro para o procedimento a matriz que tem q ser impressa
+                            call             posiciona_Posicao
+
+                            
+
+                            mov              cx,2
+                            call             pega_Posicao
+
+
+
 
     ; fazer verificar se a posicao pe valida
 
