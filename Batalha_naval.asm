@@ -434,8 +434,8 @@ pega_Posicao endp
 verifica_Posicao proc
                             push_all
                             xor              dx, dx
-                            mov              bx,di
-                            sub              bx,11
+                            mov              bx,di                         ;move o offset da posição digitada para bx
+                            sub              bx,11                         ;a partir desse ponto o porgrama vai somando o conteudo do offset das posicoes que estao em volta da posição digitada
                             add              dl,[bx]
 
                             inc              bx
@@ -460,14 +460,14 @@ verifica_Posicao proc
                             add              dl,[bx]
 
                             cmp              cx,cx_inicial
-                            jz               um
+                            jz               primeira_vez                  ;verifica se a label esta sendo rodada pela primeira vez
 
                             cmp              dx,1
-                            jnz              posicao_Aprovada
+                            jnz              posicao_Aprovada;verifica se há duas posicoes setadas em volta da posicao digitada, pois a partir da segunda posicao do barco sempre terá pelo menos uma posicao setada e volta da digitada
                             jmp              liberado
 
-    um:                     
-                            cmp              dx,0
+    primeira_vez:           
+                            cmp              dx,0                          ;garante que a primeira posição do barco tenha distacia de pelo menos 1 casa de qualquer embarcação
                             jnz              posicao_Aprovada
 
     liberado:               
