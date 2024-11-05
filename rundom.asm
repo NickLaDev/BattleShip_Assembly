@@ -1,79 +1,213 @@
-title numero aleatorio
-.MODEL SMALL
-.STACK 100h
-.DATA
-    msg     db "Numero sorteado: $"
-    newline db 13, 10, "$"             ; nova linha em DOS
-    result  db 3 dup('$')              ; buffer para o número sorteado (máx 3 dígitos)
+title numero aleatorio 0-89
+.model small
+.stack 100h
+.data
+     resultado  db ?
+     resultado2 db ?
+     msg1       db "Numero Inicial da matriz sorteado: $"
+     msg2       db 10,13,"Segundo numero sorteado: $"
+     msg3       db 10,13,"Posicoes da matriz: $"
+.code
 
-.CODE
-MAIN PROC
-                   MOV  AX, @DATA                  ; Inicializa o segmento de dados
-                   MOV  DS, AX
+main proc
 
-    ; Obtém os segundos do sistema (para simular aleatoriedade)
-                   MOV  AH, 2Ch                    ; Função 2Ch - Obter hora do DOS
-                   INT  21h                        ; Chama interrupção do DOS
-                   MOV  AL, DH                     ; Move os segundos (DH) para AL
+                          mov  ax,@data
+                          mov  ds,ax
 
-    ; Reduz o valor para o intervalo de 0 a 90
-                   MOV  CX, 91                     ; Define o limite superior (91) para divisão
-                   DIV  CL                         ; AL = AL mod 91, ou seja, AL estará no intervalo 0-90
+     ; Chamar a interrupção 1Ah para obter o contador do timer
+                          MOV  AH, 00h
+                          INT  1Ah                      ; Dx contem o valor do numero aleatorio
 
-    ; Converte AL para uma string decimal e armazena em 'result'
-                   MOV  BL, AL                     ; Armazena o número aleatório em BL para conversão
-                   CALL DecimalToASCII             ; Converte BL para ASCII e armazena em 'result'
+                          mov  cx,90
+                          mov  ax,dx
+     ; vamos dividir por 90 para obter um valor de 0 a 89
+                          xor  dx,dx
+                          div  cx                       ; DX:AX / CX -> AX = quociente, DX = resto
 
-    ; Exibe a mensagem "Numero sorteado: "
-                   MOV  DX, OFFSET msg
-                   MOV  AH, 9
-                   INT  21h                        ; Chama interrupção para imprimir a string
 
-    ; Exibe o número sorteado
-                   MOV  DX, OFFSET result
-                   MOV  AH, 9
-                   INT  21h                        ; Chama interrupção para imprimir o número
+     ; o resto (DX) será nosso número aleatório de 0 a 89
 
-    ; Imprime uma nova linha
-                   MOV  DX, OFFSET newline
-                   MOV  AH, 9
-                   INT  21h                        ; Chama interrupção para nova linha
+     ; Armazenar o número sorteado na variável resultado
+   
+                          MOV  resultado, dl
 
-    ; Finaliza o programa
-                   MOV  AH, 4Ch
-                   INT  21h                        ; Termina o programa
+                          lea  dx,msg1
+                          mov  ah,9
+                          int  21h
 
-MAIN ENDP
+                          xor  ax,ax
+                          mov  al,resultado
 
-    ; Sub-rotina para converter um byte em decimal e armazenar em 'result'
-DecimalToASCII PROC
-                   MOV  CX, 0                      ; Limpa CX
-                   MOV  DI, OFFSET result+2        ; Define DI para armazenar o último dígito
+                          call imprime_Dois_Digitos
 
-    ConvertLoop:   
-                   MOV  AX, BL                     ; Move o número para AX
-                   MOV  DX, 0                      ; Limpa DX para divisão
-                   MOV  BX, 10                     ; Divisor para obter o dígito decimal
-                   DIV  BX                         ; AX / 10 -> AL = quociente, AH = resto
-                   ADD  AH, '0'                    ; Converte o resto para ASCII
-                   MOV  [DI], AH                   ; Armazena o caractere ASCII no buffer
-                   DEC  DI                         ; Move para o próximo dígito (esquerda)
-                   INC  CX                         ; Incrementa a contagem de dígitos
-                   MOV  BL, AL                     ; Resto da divisão (próximo dígito)
-                   OR   BL, BL                     ; Testa se BL é zero
-                   JNZ  ConvertLoop                ; Continua até não haver mais dígitos
+                          lea  dx,msg2
+                          mov  ah,9
+                          int  21h
 
-    ; Ajusta os dígitos para a posição correta no buffer
-                   MOV  DI, OFFSET result
-                   ADD  DI, 3
-                   SUB  DI, CX                     ; Aponta DI para o primeiro dígito não-nulo
-                   MOV  SI, DI
+                          xor  dx,dx
 
-    ; Ajusta o resultado para a posição inicial do buffer
-                   MOV  DI, OFFSET result
-                   REP  MOVSB                      ; Copia o número para a posição inicial
-                   MOV  BYTE PTR [DI + CX], '$'    ; Adiciona o caractere de terminação '$'
+                          MOV  AH, 00h
+                          INT  1Ah                      ; Dx contem o valor do numero aleatorio
 
-                   RET
-DecimalToASCII ENDP
-END MAIN
+                          xor  ax,ax
+
+                          mov  cx,4
+                          mov  ax,dx
+                          xor  dx,dx
+                          div  cx
+               
+                          MOV  resultado2, dl
+
+                          add  dl,30h
+                          mov  ah,2
+                          int  21h
+
+                          lea  dx,msg3
+                          mov  ah,9
+                          int  21h
+
+                          xor  dx,dx
+                          xor  bx,bx
+
+                          mov  bl,resultado
+                          mov  dl,resultado2
+                          mov  cx,4
+
+                          cmp  dx,0                     ;Cima
+                          je   para_Cima
+
+                          cmp  dx,1                     ;Baixo
+                          je   para_Baixo
+
+                          cmp  dx,2                     ;Direita
+                          je   para_Direita
+
+                          cmp  dx,3                     ;Esquerda
+                          je   para_Esquerda
+
+     para_Cima:           
+                          
+                          xor  ax,ax
+                          mov  al,bl
+                          call imprime_Dois_Digitos
+
+                          sub  bl,10
+ 
+                          loop para_Cima
+
+                          jmp  fim_Total
+
+     para_Baixo:          
+
+
+                          xor  ax,ax
+                          mov  al,bl
+                          call imprime_Dois_Digitos
+
+
+                          add  bl,10
+ 
+                          loop para_Baixo
+
+
+
+                          jmp  fim_Total
+     para_Esquerda:       
+
+
+
+                          xor  ax,ax
+                          mov  al,bl
+                          call imprime_Dois_Digitos
+
+
+                          add  bl,1
+ 
+                          loop para_Esquerda
+
+
+
+                          jmp  fim_Total
+     para_Direita:        
+
+
+                          xor  ax,ax
+                          mov  al,bl
+                          call imprime_Dois_Digitos
+
+
+                          sub  bl,1
+ 
+                          loop para_Direita
+
+
+     fim_Total:           
+
+                          mov  ah,4ch
+                          int  21h
+
+main endp
+
+imprime_Dois_Digitos proc                               ; Tem que passar para AL o numero que deseja ser impresso
+
+                        
+                          push ax
+                          push bx
+                          push cx
+                          push dx
+
+
+                          mov  cx,10
+
+     ;Imprimir numero de dois digitos em decimal
+
+                          xor  bx,bx
+
+     print_Loop:          
+
+                          div  cl                       ;Divide Ax pelo valor posto; Salva em al resultado e ah = rest
+
+                          mov  bl,ah
+                          push bx
+
+                          mov  ah,0
+
+                          cmp  al,0
+                          je   fim_Impressao
+                          jmp  print_Loop
+
+
+     fim_Impressao:       
+
+                          mov  cx,2
+
+     loop_fim_Impressao:  
+
+                          xor  dx,dx
+                          pop  dx
+
+     ;cmp  dx,0
+     ;jb   fim
+
+     ;cmp  dx,9
+     ;ja   fim
+
+                          add  dl,30h
+                          mov  ah,2
+                          int  21h
+
+     ;jmp  fim_Impressao
+                          loop loop_fim_Impressao
+
+     fim:                 
+
+                          pop  dx
+                          pop  cx
+                          pop  bx
+                          pop  ax
+
+                          ret
+
+imprime_Dois_Digitos endp
+
+end main
