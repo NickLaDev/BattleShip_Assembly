@@ -1,0 +1,18 @@
+random_Number macro numero
+
+    ; Chamar a interrupção 1Ah para obter o contador do timer
+                  MOV AH, 00h
+                  INT 1Ah          ; Dx contem o valor do numero aleatorio
+
+                  mov cx,numero
+                  mov ax,dx
+    ; vamos dividir por 90 para obter um valor de 0 a 89
+                  xor dx,dx
+                  div cx           ; DX:AX / CX -> AX = quociente, DX = resto
+
+
+    ; o resto (DX) será nosso número aleatório de 0 a 89
+
+    ; Armazenar o número sorteado na variável resultado
+   
+endm
