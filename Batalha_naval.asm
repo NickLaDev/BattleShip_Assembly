@@ -68,10 +68,17 @@ endm
     MSGLEMBRESE_FRAGATA        db "Lembre-se, o fragata ocupa 3 posicoes como a seguir: $"
     MSGLEMBRESE_SUBMARINO      db "Lembre-se, o Subamarino ocupa 2 posicoes, como a seguir: $"
     MSGPEGAPOSICAO             db "Digite a posicao desejada$"
-    MSGPEGAPOSICAO2            db "para embarcacao:$"                                                                                                                                                        ;&=padrao estabelecido para quebra de linhas na funcao de imprir criada
+    MSGPEGAPOSICAO2            db "para embarcacao:$"
+    MSGPOSICAOOPONENTE1        db "Agora, o Computador ira alocar a posicao de suas embarcacoes $"
+    MSGPOSICAOOPONENTE2        db "Serao posicionadas as mesmas embarcacoes anteriores $"
+    MSGPOSICAOOPONENTE3        DB "Pressione qualquer tecla, a cada embarcacao $"
+    MSGPOSICAOOPONENTE4        DB "para liberar o pc para posiciona-la $"
+    MSGPOSICAOOPONENTE5        DB "PRESSIONE QUALQUER TECLA PARA CONTINUCAR $"
+    MSGATENCAO                 DB "ATENCAO:$"
+    ;&=padrao estabelecido para quebra de linhas na funcao de imprir criada
     ;--------------------------------------Declaracao das matrizes que serao utilizadas como tabuleiro-------------------------------------------------------------------------------------;
     matriz_Jogador             db 10 dup (9 dup (0))
-    matriz_Adversario          db 10 dup (9 dup(0))
+    matriz_Adversario          db 10 dup (9 dup(0)),"$"
     matriz_Controle_Jogador    db 10 dup (9 dup (0)),"$"
     matriz_Controle_Adversario db 10 dup (9 dup (0))
     colunas                    db "[0] [1] [2] [3] [4] [5] [6] [7] [8] [9] $"
@@ -106,23 +113,29 @@ main proc
 
     ; call             imprimir_Introducao             ;Imprime a introdução e fica travado até apertar alguma tecla
 
-    ; call             limpa_Tela                      ;Limpa tela apos sair da proc de cima
+                                 call             limpa_Tela                      ;Limpa tela apos sair da proc de cima
 
-    ;call             pega_Nome                       ;Pega o nome do jogador
+    ;  call             pega_Nome                       ;Pega o nome do jogador
 
-    ;call             limpa_Tela                      ;Limpa a tela
+                                 call             limpa_Tela                      ;Limpa a tela
 
     ;call             Imprime_tabuleiro               ;Começa a posiconar os navios
 
-    ;call             posiciona_Navios
+    ;  call             posiciona_Navios
+
+    ; call             tela_Posicionamento_Oponente
 
                                  call             limpa_Tela
 
-                                 call             imprime_Tabuleiro
+    ;call             imprime_Tabuleiro
 
                                  call             posiciona_Navios_Aleatorio
 
+                                 xor              si,si
+
                                  lea              si,matriz_Adversario
+
+                                 call             imprime_Tabuleiro
 
                                  call             posiciona_Posicao
     
@@ -797,7 +810,7 @@ sort_90 proc                                                                    
                                  ret
 sort_90 endp
 
-sort_4 proc                                                                       ;Sorteia um nuemro de 0-3 e retorna na variavel resultado2 o valor do sorteio
+sort_2 proc                                                                       ;Sorteia um nuemro de 0-3 e retorna na variavel resultado2 o valor do sorteio
 
                                  push_all
 
@@ -808,7 +821,7 @@ sort_4 proc                                                                     
 
                                  xor              ax,ax
 
-                                 mov              cx,4
+                                 mov              cx,2
                                  mov              ax,dx
                                  xor              dx,dx
                                  div              cx
@@ -818,7 +831,7 @@ sort_4 proc                                                                     
                                  pop_all
 
                                  ret
-sort_4 endp
+sort_2 endp
 
 posicona_Posicoes_Aleatorias proc                                                 ;Passar cx com a quantidade de posicoes
 
@@ -827,64 +840,67 @@ posicona_Posicoes_Aleatorias proc                                               
 
                                  xor              dx,dx
                                  xor              bx,bx
+                                 xor              si,si
 
                                  mov              bl,resultado_Sorteio_1
                                  mov              dl,resultado_Sorteio_2
                                  lea              si,matriz_Adversario
-                                 mov              cx,4
                                  add              si,bx
+                                 mov              cx,cx_inicial
+
+                                 lea              ax,matriz_Adversario
+
+                                 add              ax,30
 
                                  cmp              dx,0                            ;Cima
-                                 je               para_Cima
+                                 je               Vertical
 
-                                 cmp              dx,1                            ;Baixo
-                                 je               para_Baixo
+                                 cmp              dx,1                            ;Direita
+                                 je               Horizontal
+    Vertical:                    
 
-                                 cmp              dx,2                            ;Direita
-                                 je               para_Direita
+                                 cmp              si,ax
 
-                                 cmp              dx,3                            ;Esquerda
-                                 je               para_Esquerda
-
-    para_Cima:                   
+                                 jge              verifica_posicao_concluida
+                                 
+                                 add              si, 10
+                                 
+                                 jmp              Vertical
+                                 
+    verifica_posicao_concluida:  
                 
                                  mov              byte ptr [si],1
 
                                  sub              si,10
  
-                                 loop             para_Cima
+                                 loop             verifica_posicao_concluida
 
                                  jmp              fim_Total
+    Horizontal:                  
+                                 xor              bx,bx
+                                 xor              ax,ax
+                                 mov              al,resultado_Sorteio_1
+                                 mov              bl,10
+                                 div              bl                              ;Resto, que esta em ah, tem que ser menor ou igual 6
 
-    para_Baixo:                  
+                                 sub              bx,cx_inicial
+                                 cmp              ah,bl
+                                 jbe              verifica_posicao_concluida2
 
-                                 mov              byte ptr [si],1
+                                 mov              al,ah
+                                 mov              ah,0
+                                 sub              al,bl
+                                 sub              si,ax
+                                 mov              cx,cx_inicial
+    verifica_posicao_concluida2: 
 
-                                 add              si,10
- 
-                                 loop             para_Baixo
+    ;jmp              Horizontal
 
-
-
-                                 jmp              fim_Total
-    para_Esquerda:               
-                               
                                  mov              byte ptr [si],1
 
                                  add              si,1
  
-                                 loop             para_Esquerda
-
-
-
-                                 jmp              fim_Total
-    para_Direita:                
-
-                                 mov              byte ptr [si],1
-
-                                 sub              si,1
- 
-                                 loop             para_Direita
+                                 loop             verifica_posicao_Concluida2
 
 
     fim_Total:                   
@@ -899,7 +915,12 @@ posiciona_Navios_Aleatorio proc
                                 
                                  call             fragata_Aleatorio
 
+    ;Loop para demorar e randomizar mais o clook
+                                 call             tela_Intermediaria
+
                                  call             encouracado_Aleatorio
+
+                                 call             tela_Intermediaria
 
                                  ret
 posiciona_Navios_Aleatorio endp
@@ -908,9 +929,11 @@ encouracado_Aleatorio proc
 
                                  call             sort_90
 
-                                 call             sort_4
+                                 call             sort_2
 
-                                 mov              cx,4
+                                 mov              cx_inicial,4
+
+                                 xor              si,si
 
                                  lea              si,matriz_Adversario
 
@@ -924,9 +947,11 @@ fragata_Aleatorio proc
 
                                  call             sort_90
 
-                                 call             sort_4
+                                 call             sort_2
 
-                                 mov              cx,3
+                                 mov              cx_inicial,3
+
+                                 xor              si,si
 
                                  lea              si,matriz_Adversario
 
@@ -934,6 +959,75 @@ fragata_Aleatorio proc
 
                                  ret
 fragata_Aleatorio endp
+
+tela_Posicionamento_Oponente proc
+
+                                 push_all
+
+    ;Explicar -> confirmar cada posicao -> tela tdoas posicoes colocadas e proximos passos
+
+                                 call             limpa_Tela
+
+                                 move_XY          10,5
+
+
+                                 lea              si,msgposicaooponente1
+                                 xor              bx,bx
+                                 mov              bl,0ch
+                                 call             imprime_Letras
+
+                                 move_XY          14,7
+
+                                 lea              si,msgposicaooponente2
+                                 xor              bx,bx
+                                 mov              bl,0fh
+                                 call             imprime_Letras
+
+                                 move_XY          35,9
+                                 lea              si,msgatencao
+                                 xor              bx,bx
+                                 mov              bl,8ch
+                                 call             imprime_Letras
+
+                                 move_XY          18,11
+
+                                 lea              si,msgposicaooponente3
+                                 xor              bx,bx
+                                 mov              bl,0fh
+                                 call             imprime_Letras
+
+                                 move_XY          22,12
+                                 lea              si,msgposicaooponente4
+                                 xor              bx,bx
+                                 mov              bl,0fh
+                                 call             imprime_Letras
+
+                                 move_XY          20,14
+                                 lea              si,MSGPOSICAOOPONENTE5
+                                 add              bx,128
+                                 call             imprime_Letras
+
+                                 mov              ah,1
+                                 int              21h
+
+                                 pop_all
+
+                                 ret
+tela_Posicionamento_Oponente endp
+
+tela_Intermediaria proc
+
+                                 push_all
+
+                                 call             limpa_Tela
+
+                                 mov              ah,1
+                                 int              21h
+
+                                 pop_all
+
+                                 ret
+tela_Intermediaria endp
 
     fim:                         
                                  mov              ah,4ch
