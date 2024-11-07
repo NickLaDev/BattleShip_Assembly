@@ -75,6 +75,11 @@ endm
     MSGPOSICAOOPONENTE4        DB "para liberar o pc para posiciona-la $"
     MSGPOSICAOOPONENTE5        DB "PRESSIONE QUALQUER TECLA PARA CONTINUCAR $"
     MSGATENCAO                 DB "ATENCAO:$"
+    MSGALENCOURADO             DB "Agora, libere o computador para posicionar o ENCOURADO $"
+    MSGALFRAGATA               DB "Agora, libere o computador para posicionar a FRAGATA $"
+    MSGALSUBMARINO             DB "Agora, libere o computador para posicionar o SUBMARINO $"
+    MSGALHIDROAVIAO            DB "Agora, libere o computador para posicionar o HIDROAVIAO $"
+    
     ;&=padrao estabelecido para quebra de linhas na funcao de imprir criada
     ;--------------------------------------Declaracao das matrizes que serao utilizadas como tabuleiro-------------------------------------------------------------------------------------;
     matriz_Jogador             db 10 dup (9 dup (0))
@@ -916,11 +921,11 @@ posiciona_Navios_Aleatorio proc
                                  call             fragata_Aleatorio
 
     ;Loop para demorar e randomizar mais o clook
-                                 call             tela_Intermediaria
+                                 call             tela_Intermediaria_Encourado
 
                                  call             encouracado_Aleatorio
 
-                                 call             tela_Intermediaria
+    ;  call             tela_Intermediaria
 
                                  ret
 posiciona_Navios_Aleatorio endp
@@ -1015,11 +1020,30 @@ tela_Posicionamento_Oponente proc
                                  ret
 tela_Posicionamento_Oponente endp
 
-tela_Intermediaria proc
+tela_Intermediaria_Encourado proc
 
                                  push_all
 
                                  call             limpa_Tela
+
+                                 move_XY          13,3
+
+                                 lea              si,msgalencourado
+                                 mov              bl,0ch
+                                 call             imprime_Letras
+
+                                 mov              bl,0fh
+
+                                 mov              cx,4
+                                 xor              dx,dx
+                                 mov              dx,34
+
+    loop_Desenha_Encourado2:     
+
+                                 desenha_Quadrado dl,6
+
+                                 add              dl,3
+                                 loop             loop_Desenha_Encourado2
 
                                  mov              ah,1
                                  int              21h
@@ -1027,7 +1051,7 @@ tela_Intermediaria proc
                                  pop_all
 
                                  ret
-tela_Intermediaria endp
+tela_Intermediaria_Encourado endp
 
     fim:                         
                                  mov              ah,4ch
