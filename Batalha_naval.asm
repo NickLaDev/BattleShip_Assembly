@@ -1026,7 +1026,7 @@ tela_Intermediaria_Encourado proc
 
                                  call             limpa_Tela
 
-                                 move_XY          13,3
+                                 move_XY          13,7
 
                                  lea              si,msgalencourado
                                  mov              bl,0ch
@@ -1040,13 +1040,22 @@ tela_Intermediaria_Encourado proc
 
     loop_Desenha_Encourado2:     
 
-                                 desenha_Quadrado dl,6
+                                 desenha_Quadrado dl,10
 
                                  add              dl,3
                                  loop             loop_Desenha_Encourado2
 
+                                 move_XY          19,13
+
+                                 lea              si,msgposicaooponente5
+                                 mov              bl,0ch
+                                 add              bl,126
+                                 call             imprime_Letras
+
                                  mov              ah,1
                                  int              21h
+
+                                 call             limpa_Tela
 
                                  pop_all
 
