@@ -551,10 +551,12 @@ decifra_Posicao proc
 
                                  add              ax,[si]                         ; Salva em AX a multipliacap de [si+1] com [si] (salvo em ax anteriormente)
 
+    ;Ax está com a posição absoluta desejada
+
                                  lea              di,matriz_Controle_Jogador
                                  add              di,ax                           ;Passa para a matriz o valor 1 na posicao desejada
 
-                                 call             verifica_Posicao
+                                 call             verifica_Posicao                ;Passa para DI com a posicaod da memoria que desejamso alterar ( offset matriz + Posicao desejada )
                                  jnz              errado
 
                                  mov              byte ptr [di],1
@@ -850,7 +852,10 @@ posicona_Posicoes_Aleatorias proc                                               
                                  mov              bl,resultado_Sorteio_1
                                  mov              dl,resultado_Sorteio_2
                                  lea              si,matriz_Adversario
-                                 add              si,bx
+                                 add              si,bx                           ; ( Offset matriz + posicao aleatoria )
+    ;Si é oque tem q ser passado para o verefica posicao, so que por DI
+
+
                                  mov              cx,cx_inicial
 
                                  lea              ax,matriz_Adversario
@@ -873,21 +878,50 @@ posicona_Posicoes_Aleatorias proc                                               
                                  jmp              Vertical
                                  
     verifica_posicao_concluida:  
-                
+
+                                 mov              di,si
+                                 
+                                 call             verifica_Posicao                ;Vai vereficar se a posição pode ser inserida ou nao ( Se há barcos em voltas )
+
+    ;Tem que ser passado para di o offset da matriz + da posicao aleatoria
+
+                                 jnz              ta_errado
+                                 
                                  mov              byte ptr [si],1
 
                                  sub              si,10
- 
-                                 loop             verifica_posicao_concluida
 
+                                 loop             verifica_posicao_concluida
+                                 
                                  jmp              fim_Total
+
+    ta_errado:                   
+                                 call             sort_90
+                                 
+                                 call             sort_2
+
+                                 cmp              cx,cx_inicial
+                                 
+                                 jnz              apaga_posicioes
+
+                                 jmp              posicona_Posicoes_Aleatorias
+
+    apaga_posicioes:             
+
+                                 add              di,10
+
+                                 mov              byte ptr [di],0
+
+                                 inc              cx
+
+                                 jmp              ta_errado
     Horizontal:                  
                                  xor              bx,bx
                                  xor              ax,ax
                                  mov              al,resultado_Sorteio_1
                                  mov              bl,10
                                  div              bl                              ;Resto, que esta em ah, tem que ser menor ou igual 6
-
+                                 div              bl
                                  sub              bx,cx_inicial
                                  cmp              ah,bl
                                  jbe              verifica_posicao_concluida2
@@ -917,15 +951,12 @@ posicona_Posicoes_Aleatorias endp
 
 posiciona_Navios_Aleatorio proc
 
-                                
+                                     
                                  call             fragata_Aleatorio
 
-    ;Loop para demorar e randomizar mais o clook
                                  call             tela_Intermediaria_Encourado
 
                                  call             encouracado_Aleatorio
-
-    ;  call             tela_Intermediaria
 
                                  ret
 posiciona_Navios_Aleatorio endp
@@ -964,6 +995,26 @@ fragata_Aleatorio proc
 
                                  ret
 fragata_Aleatorio endp
+
+submarino_Aleatorio proc
+
+
+                                 call             sort_90
+
+                                 call             sort_2
+
+                                 mov              cx_inicial,2
+
+                                 xor              si,si
+
+                                 lea              si,matriz_Adversario
+
+                                 call             posicona_Posicoes_Aleatorias
+
+
+                                 ret
+submarino_Aleatorio endp
+
 
 tela_Posicionamento_Oponente proc
 
