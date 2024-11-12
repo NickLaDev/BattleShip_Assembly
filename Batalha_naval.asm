@@ -64,9 +64,11 @@ endm
     MSGENCOURADO               db "Comece digitando a posicao do ENCOURADO: $"
     MSGFRAGATA                 db "Digite a posicao do FRAGATA: $"
     MSGSUBMARINO               db "Digite a posicao do SUBMARINO: $"
+    MSGHIDROAVIAO              db "Digite a posicao do HIDROAVIAO: $"
     MSGLEMBRESE1               db "Lembre-se o encourado ocupa 4 posicoes, como a seguir: $"
     MSGLEMBRESE_FRAGATA        db "Lembre-se, o fragata ocupa 3 posicoes como a seguir: $"
     MSGLEMBRESE_SUBMARINO      db "Lembre-se, o Subamarino ocupa 2 posicoes, como a seguir: $"
+    MSGLEMBRESE_HIDROAVIAO     db "Lembre-se, o hidroaviao ocupa 4 posicoes, como a seguir: $"
     MSGPEGAPOSICAO             db "Digite a posicao desejada$"
     MSGPEGAPOSICAO2            db "para embarcacao:$"
     MSGPOSICAOOPONENTE1        db "Agora, o Computador ira alocar a posicao de suas embarcacoes $"
@@ -102,6 +104,8 @@ endm
     cx_inicial                 dw ?
     resultado_Sorteio_1        db ?
     resultado_Sorteio_2        db ?
+    posicao_Valida             db ?
+    posicao_hidroaviao         db 0
     ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------;
 .code
 
@@ -112,27 +116,27 @@ main proc
 
     ;------------------------------------------------------TELA_INCIAL--------------------------------------------------------------------------;
 
-    ;call             limpa_Tela
+                                   call             limpa_Tela
 
                                    move_XY          25,0                              ;Coloca o cursor no centro da tela
 
-    ; call             imprimir_Introducao             ;Imprime a introdução e fica travado até apertar alguma tecla
+    ; call             imprimir_Introducao               ;Imprime a introdução e fica travado até apertar alguma tecla
 
-    ;call             limpa_Tela                      ;Limpa tela apos sair da proc de cima
+    ; call             limpa_Tela                        ;Limpa tela apos sair da proc de cima
 
-    ;  call             pega_Nome                       ;Pega o nome do jogador
+    ; call             pega_Nome                         ;Pega o nome do jogador
 
-    ;call             limpa_Tela                      ;Limpa a tela
+    ; call             limpa_Tela                        ;Limpa a tela
 
-    ;call             Imprime_tabuleiro               ;Começa a posiconar os navios
+    ;call             Imprime_tabuleiro                 ;Começa a posiconar os navios
 
-    ;  call             posiciona_Navios
+    ; call             posiciona_Navios
 
     ; call             tela_Posicionamento_Oponente
 
-                                   call             limpa_Tela
+    ; call             limpa_Tela
 
-    ;call             imprime_Tabuleiro
+    ; call             imprime_Tabuleiro
 
                                    call             posiciona_Navios_Aleatorio
 
@@ -459,8 +463,13 @@ pega_Posicao endp
 
 verifica_Posicao proc
                                    push_all
+
+                                   cmp              posicao_hidroaviao,1
+                                   je               verifica_hidroaviao
+    continua:                      
                                    xor              dx, dx
                                    mov              bx,di                             ;move o offset da posição digitada para bx
+
                                    sub              bx,11                             ;a partir desse ponto o porgrama vai somando o conteudo do offset das posicoes que estao em volta da posição digitada
                                    add              dl,[bx]
 
@@ -531,6 +540,20 @@ verifica_Posicao proc
     posicao_Aprovada:              
                                    pop_all
                                    ret
+    verifica_hidroaviao:           
+
+                                   cmp              cx,1
+                                   jnz              continua
+
+                                   mov              bx,posicao_Anterior
+                                   sub              bx,11
+                                   cmp              di,bx
+                                   jz               posicao_Aprovada
+                                   add              bx,20
+                                   cmp              di,bx
+                                   jz               posicao_Aprovada
+                                   pop_all
+                                   ret
 
 verifica_Posicao endp
 
@@ -555,6 +578,7 @@ decifra_Posicao proc
 
                                    lea              di,matriz_Controle_Jogador
                                    add              di,ax                             ;Passa para a matriz o valor 1 na posicao desejada
+    ;calma
 
                                    call             verifica_Posicao                  ;Passa para DI com a posicaod da memoria que desejamso alterar ( offset matriz + Posicao desejada )
                                    jnz              errado
@@ -577,7 +601,6 @@ decifra_Posicao proc
                                    pop_all
                                    inc              cx
                                    ret
-
     final:                         
                                    pop_all
                                    ret
@@ -781,10 +804,45 @@ posiciona_Navios proc
                                    mov              cx,2
                                    call             pega_Posicao
 
+                                   call             limpa_Tela
 
+                                   move_XY          24,1
+                                   lea              si,MSGHIDROAVIAO
+                                   mov              bl,0Fh
+ 
+                                   call             imprime_Letras
+                                   move_XY          14,2
+                                   lea              si,MSGLEMBRESE_HIDROAVIAO
+                                   mov              bl,0Fh
+                                   call             imprime_Letras
 
+                                   mov              cx,3
+                                   xor              dx,dx
+                                   mov              dx,34
+    loop_desenha_hidroaviao:       
+                                   desenha_Quadrado dl,3
+                                   add              dx,3
+                                   loop             loop_desenha_hidroaviao
 
-    ; fazer verificar se a posicao pe valida
+                                   xor              dx,dx
+                                   mov              dx,37
+
+                                   desenha_Quadrado dl,5
+
+                                   call             imprime_Tabuleiro
+                                   lea              si,matriz_Controle_Jogador
+                                   call             posiciona_Posicao
+
+                                   mov              posicao_hidroaviao,1
+                                   mov              cx,4
+                                   mov              cx_inicial,cx
+                                   call             pega_Posicao
+
+                                   call             limpa_Tela
+
+                                   
+    ; nss viado
+    ;o mathias ta fazendo esse ???????
 
                                    pop_all
 
@@ -845,10 +903,13 @@ posicona_Posicoes_Aleatorias proc                                               
     ; Receber posicao da memoria da matriz do computador para poder mecher nela ( em SI )
                                    push_all
 
+    inicio_Posiciona_Posicoes:     
+
                                    xor              dx,dx
                                    xor              bx,bx
                                    xor              si,si
-
+                                 
+ 
                                    mov              bl,resultado_Sorteio_1
                                    mov              dl,resultado_Sorteio_2
                                    lea              si,matriz_Adversario
@@ -858,10 +919,6 @@ posicona_Posicoes_Aleatorias proc                                               
 
                                    mov              cx,cx_inicial
 
-                                   lea              ax,matriz_Adversario
-
-                                   add              ax,30
-
                                    cmp              dx,0                              ;Cima
                                    je               Vertical
 
@@ -869,6 +926,10 @@ posicona_Posicoes_Aleatorias proc                                               
                                    je               Horizontal
     Vertical:                      
 
+                                   lea              ax,matriz_Adversario
+
+                                   add              ax,30
+               
                                    cmp              si,ax
 
                                    jge              verifica_posicao_concluida
@@ -880,11 +941,13 @@ posicona_Posicoes_Aleatorias proc                                               
     verifica_posicao_concluida:    
                                    call             verifica_Posicao_aleatoria
 
-                                   jnz              valido
+                                   cmp              posicao_Valida,0
+                                   jne              valido
+
 
                                    call             apaga_vertical
 
-                                   jmp              posicona_Posicoes_Aleatorias
+                                   jmp              inicio_Posiciona_Posicoes
 
     valido:                        
                                    mov              byte ptr [si],1
@@ -909,15 +972,20 @@ posicona_Posicoes_Aleatorias proc                                               
                                    mov              ah,0
                                    sub              al,bl
                                    sub              si,ax
-                                   mov              cx,cx_inicial
+                                   mov              cx,cx_inicial                     ; ATE AQUI ESTA FUNCIONANDO
+
+    ;Coube na matriz
+                                   
     verifica_posicao_concluida2:   
+    
                                    call             verifica_Posicao_aleatoria
 
-                                   jnz              valido2
+                                   cmp              posicao_Valida,0
+                                   jne              valido2
 
                                    call             apaga_horizontal
 
-                                   jmp              posicona_Posicoes_Aleatorias
+                                   jmp              inicio_Posiciona_Posicoes
 
     valido2:                       
 
@@ -934,18 +1002,27 @@ posicona_Posicoes_Aleatorias proc                                               
                                    ret
 posicona_Posicoes_Aleatorias endp
 
-apaga_horizontal proc
+apaga_horizontal proc                                                                 ; Problema está por aqui
                                    push_all
+
+    loop_apaga_Horizontal:         
                                    cmp              cx,cx_inicial
                                    je               fim_apaga_horizontal
-
-                                   dec              si
-                                   mov              byte ptr[si],0
                                    inc              cx
+                                   dec              si
 
-                                   jmp              apaga_horizontal
+                                  
+                                   mov              byte ptr[si],0
+                
+                                  
+
+                                   jmp              loop_apaga_horizontal
 
     fim_apaga_horizontal:          
+
+    ; mov              byte ptr[si],0
+    ; dec              si
+
                                    call             sort_90
                                    call             sort_2
 
@@ -956,16 +1033,22 @@ apaga_horizontal endp
 apaga_vertical proc
                                    push_all
 
+    apaga_Vertical_Loop:           
+
                                    cmp              cx,cx_inicial
                                    je               fim_apaga
-
-                                   add              si,10
-                                   mov              byte ptr [si],0
                                    inc              cx
+                                   add              si,10
 
-                                   jmp              apaga_vertical
+                                   mov              byte ptr [si],0
+                                   
+                                
+                                   jmp              apaga_vertical_Loop
 
     fim_apaga:                     
+
+    ;mov              byte ptr [si],0
+    ;add              si,10
 
                                    call             sort_90
                                    call             sort_2
@@ -974,8 +1057,10 @@ apaga_vertical proc
                                    ret
 apaga_vertical endp
 
-verifica_Posicao_aleatoria proc
+verifica_Posicao_aleatoria proc                                                       ;Funcionando corretamente e retorna em posicao_Valida se está tudo OK
                                    push_all
+
+                                   mov              posicao_Valida,1
 
                                    cmp              byte ptr [si],1                   ;se for zero -> posicao invalida
                                    jz               invalido                          ;se nao for zero -> posicao valida
@@ -1017,11 +1102,17 @@ verifica_Posicao_aleatoria proc
     primeira_vez2:                 
 
                                    cmp              dl,1
+                                   jb               fim_Verifica_posicao_aleatoria
+                                   mov              posicao_Valida,0
+   
+                                   
+                                   
                                    jmp              fim_verifica_posicao_aleatoria
                                    
     invalido:                      
-                                   mov              ax,0
-                                   cmp              ax,0
+                                 
+                                   
+                                   mov              posicao_Valida,0
     fim_verifica_posicao_aleatoria:
                                    pop_all
 
@@ -1031,19 +1122,24 @@ verifica_Posicao_aleatoria endp
 posiciona_Navios_Aleatorio proc
 
                                    push_all
+                                   
+                                   call             tela_Intermediaria_Fragata
+
                                    call             fragata_Aleatorio
 
                                    call             tela_Intermediaria_Encourado
 
                                    call             encouracado_Aleatorio
 
-                                   call             tela_Intermediaria_Encourado
+                                   call             tela_Intermediaria_Submarino
 
                                    call             submarino_Aleatorio
 
-                                   ;call             tela_Intermediaria_Encourado
+                                   call             tela_Intermediaria_Submarino
 
-                                   ;call             submarino_Aleatorio
+                                   call             submarino_Aleatorio
+
+    ;call             tela_Intermediaria_Encourado
                                    
                                    pop_all
                                    ret
@@ -1101,7 +1197,6 @@ submarino_Aleatorio proc
                                    pop_all
                                    ret
 submarino_Aleatorio endp
-
 
 tela_Posicionamento_Oponente proc
 
@@ -1189,9 +1284,11 @@ tela_Intermediaria_Encourado proc
                                    mov              bl,0ch
                                    add              bl,126
                                    call             imprime_Letras
+                                   
 
                                    mov              ah,1
                                    int              21h
+
 
                                    call             limpa_Tela
 
@@ -1199,6 +1296,88 @@ tela_Intermediaria_Encourado proc
 
                                    ret
 tela_Intermediaria_Encourado endp
+
+tela_Intermediaria_Fragata proc
+
+                                   push_all
+
+                                   call             limpa_Tela
+
+                                   move_XY          13,7
+
+                                   lea              si,msgalfragata
+                                   mov              bl,0ch
+                                   call             imprime_Letras
+
+                                   mov              bl,0fh
+
+                                   mov              cx,3
+                                   xor              dx,dx
+                                   mov              dx,36
+
+    loop_Desenha_Fragata2:         
+
+                                   desenha_Quadrado dl,10
+
+                                   add              dl,3
+                                   loop             loop_Desenha_Fragata2
+
+                                   move_XY          19,13
+
+                                   lea              si,msgposicaooponente5
+                                   mov              bl,0ch
+                                   add              bl,126
+                                   call             imprime_Letras
+
+                                   mov              ah,1
+                                   int              21h
+
+                                   
+
+                                   pop_all
+                                   ret
+tela_Intermediaria_Fragata endp
+
+tela_Intermediaria_Submarino proc
+
+                                   push_all
+
+
+                                   call             limpa_Tela
+
+                                   move_XY          13,7
+
+                                   lea              si,msgalsubmarino
+                                   mov              bl,0ch
+                                   call             imprime_Letras
+
+                                   mov              bl,0fh
+
+                                   mov              cx,2
+                                   xor              dx,dx
+                                   mov              dx,36
+
+    loop_Desenha_Submarino3:       
+
+                                   desenha_Quadrado dl,10
+                                   add              dl,3
+                                   loop             loop_Desenha_submarino3
+
+                                   move_XY          19,13
+
+                                   lea              si,msgposicaooponente5
+                                   mov              bl,0ch
+                                   add              bl,126
+                                   call             imprime_Letras
+
+                                   mov              ah,1
+                                   int              21h
+
+                                   call             limpa_Tela
+                                   pop_all
+
+                                   ret
+tela_Intermediaria_Submarino endp
 
     fim:                           
                                    mov              ah,4ch
