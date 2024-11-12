@@ -937,7 +937,7 @@ posicona_Posicoes_Aleatorias endp
 apaga_horizontal proc
                                    push_all
                                    cmp              cx,cx_inicial
-                                   jz               fim_apaga_horizontal
+                                   je               fim_apaga_horizontal
 
                                    dec              si
                                    mov              byte ptr[si],0
@@ -957,7 +957,7 @@ apaga_vertical proc
                                    push_all
 
                                    cmp              cx,cx_inicial
-                                   jz               fim_apaga
+                                   je               fim_apaga
 
                                    add              si,10
                                    mov              byte ptr [si],0
@@ -978,7 +978,7 @@ verifica_Posicao_aleatoria proc
                                    push_all
 
                                    cmp              byte ptr [si],1                   ;se for zero -> posicao invalida
-                                   jz               fim_verifica_posicao_aleatoria    ;se nao for zero -> posicao valida
+                                   jz               invalido                          ;se nao for zero -> posicao valida
 
                                    xor              dx, dx
                                    xor              bx,bx
@@ -1007,7 +1007,21 @@ verifica_Posicao_aleatoria proc
                                    inc              bx
                                    add              dl,[bx]
 
+                                   cmp              cx,cx_inicial
+                                   jz               primeira_vez2
+
                                    cmp              dl,2
+                                   jge              invalido
+
+                                   jmp              fim_verifica_posicao_aleatoria
+    primeira_vez2:                 
+
+                                   cmp              dl,1
+                                   jmp              fim_verifica_posicao_aleatoria
+                                   
+    invalido:                      
+                                   mov              ax,0
+                                   cmp              ax,0
     fim_verifica_posicao_aleatoria:
                                    pop_all
 
@@ -1027,9 +1041,9 @@ posiciona_Navios_Aleatorio proc
 
                                    call             submarino_Aleatorio
 
-                                   call             tela_Intermediaria_Encourado
+                                   ;call             tela_Intermediaria_Encourado
 
-                                   call             submarino_Aleatorio
+                                   ;call             submarino_Aleatorio
                                    
                                    pop_all
                                    ret
