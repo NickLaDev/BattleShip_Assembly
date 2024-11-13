@@ -160,9 +160,11 @@ main proc
 
                                       call             posiciona_Posicao
 
-    ;                                   call             tela_Inicio_Ataque
+    ; call             limpa_Tela
 
-                                      call             ataque
+    ; call             tela_Inicio_Ataque
+
+    ; call             ataque
     
     ;---------------------------------FIM_DO_PROGRAMA--------------------------------------------------------------------------------------;
     
@@ -1046,7 +1048,6 @@ posicona_Posicoes_Aleatorias proc                                               
 
                                       inc              contagem_Reposicionamentos_Hidro
 
-                                     
                                       call             apaga_Hidroaviao
 
                                       cmp              contagem_Reposicionamentos_Hidro,65535
@@ -1455,7 +1456,21 @@ posiciona_Navios_Aleatorio proc
 
     fim_Posicionamento_al:                                                                       ;Teoricamente terminou de posicionar tudo, apenas garantir que deu bom
 
+    ;contar todas as posicoes da matriz
 
+                                      mov              cx,89
+                                      lea              si,matriz_Adversario
+                                      xor              bx,bx
+
+    contagem_Matriz:                  
+
+                                      add              bl,[si]
+                                      inc              si
+
+                                      loop             contagem_Matriz
+
+                                      cmp              bl,19
+                                      jne              corta_Caminho
                                    
                                       pop_all
                                       ret
@@ -1753,7 +1768,7 @@ tela_Intermediaria_Hidroaviao proc
                                       add              dl,3
                                       loop             loop_Desenha_Hidroaviao2
 
-                                      desenha_Quadrado 38,12
+                                      desenha_Quadrado 39,12
 
                                       move_XY          19,14
 
