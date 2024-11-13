@@ -103,7 +103,7 @@ endm
     DIV_3                            DB 195,196,196,196,197,196,196,196,197,196,196,196,197,196,196,196,197,196,196,196,197,196,196,196,197,196,196,196,197,196,196,196,197,196,196,196,197,196,196,196,180,"$"
     DIV_4                            DB 179, 10 dup (3 dup (" "), 179), "$"
     quadrado                         db 219,219,"$"
-    lateral_Direita                  db 9,19,29,39,49,59,69,79,89
+    lateral_Direita                  dw 9,19,29,39,49,59,69,79,89,"$"
     ;--------------------------------------Variaveis de ambiente-------------------------------------------------------------------------------------------------------------------;
 
     nome_Jogador                     db 15 dup (?)
@@ -1010,6 +1010,7 @@ posicona_Posicoes_Aleatorias proc                                               
     ;Se esta aqui eh pq estamos posicionando um hidroaviao
     ;Precisar verificar se a posicao sorteada esta fora da coluna 9
 
+                                      call             verifica_Lateral                          ;Pode ou nao modificar si
 
                                       call             verifica_Posicao_aleatoria
 
@@ -1045,10 +1046,12 @@ posicona_Posicoes_Aleatorias proc                                               
 
                                       inc              contagem_Reposicionamentos_Hidro
 
+                                     
+                                      call             apaga_Hidroaviao
+
                                       cmp              contagem_Reposicionamentos_Hidro,65535
                                       je               renicia_Posicionamento                    ;Vai ter q comecar tudo do comeco
 
-                                      call             apaga_Hidroaviao
 
                                       jmp              inicio_Posiciona_Posicoes
 
@@ -1130,6 +1133,51 @@ apaga_vertical_Hidroaviao proc
                                       ret
 
 apaga_vertical_Hidroaviao endp
+
+verifica_Lateral proc                                                                            ;Si esta offset + posicao sorteada
+
+                                      push             ax
+                                      push             bx
+                                      push             cx
+                                      push             dx
+
+                                      xor              bx,bx
+                                      xor              di,di
+                                      xor              ax,ax
+
+  
+                                      lea              ax,matriz_Adversario                      ;ta ok
+                                      lea              di,lateral_Direita
+                                      sub              si,ax                                     ; 0-89
+                                      mov              cx,9
+                                      dec              di
+
+    loop_Cmp_Lateral:                 
+                                      inc              di
+                                      mov              bx,[di]
+                                      cmp              si,bx
+                                      je               back_1
+
+                                      loop             loop_Cmp_Lateral
+
+                                      add              si,ax
+
+                                      jmp              fim_cmps
+
+    back_1:                           
+
+                                      dec              si
+                                      add              si,ax
+
+                                   
+    fim_cmps:                         
+                                      pop              dx
+                                      pop              cx
+                                      pop              bx
+                                      pop              ax
+
+                                      ret
+verifica_Lateral endp
 
 verifica_Posicao_Hidroaviao proc
 
@@ -1405,7 +1453,9 @@ posiciona_Navios_Aleatorio proc
                                       cmp              reiniciar,1
                                       je               corta_Caminho
 
-    fim_Posicionamento_al:            
+    fim_Posicionamento_al:                                                                       ;Teoricamente terminou de posicionar tudo, apenas garantir que deu bom
+
+
                                    
                                       pop_all
                                       ret
@@ -1421,7 +1471,7 @@ hidroaviao_Aleatorio proc
                                       push_all
 
                                       call             sort_90
-
+                                     
                                       mov              resultado_Sorteio_2,0                     ;Para que ele seja na vertical
 
                                       mov              eh_Hidroaviao,1                           ;Avisa para as proximas procs que agora sera posicionado um hidroaviao
