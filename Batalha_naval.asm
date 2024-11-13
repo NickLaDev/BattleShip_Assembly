@@ -122,23 +122,23 @@ main proc
                                    move_XY          25,0                              ;Coloca o cursor no centro da tela
 
     
-      call             imprimir_Introducao               ;Imprime a introdução e fica travado até apertar alguma tecla
+                                   call             imprimir_Introducao               ;Imprime a introdução e fica travado até apertar alguma tecla
 
-     call             limpa_Tela                        ;Limpa tela apos sair da proc de cima
+                                   call             limpa_Tela                        ;Limpa tela apos sair da proc de cima
 
-    call             pega_Nome                         ;Pega o nome do jogador
+                                   call             pega_Nome                         ;Pega o nome do jogador
 
-    call             limpa_Tela                        ;Limpa a tela
+                                   call             limpa_Tela                        ;Limpa a tela
 
-    call             Imprime_tabuleiro                 ;Começa a posiconar os navios
+                                   call             Imprime_tabuleiro                 ;Começa a posiconar os navios
 
-    call             posiciona_Navios
+                                   call             posiciona_Navios
 
-    call             tela_Posicionamento_Oponente
+                                   call             tela_Posicionamento_Oponente
 
-    call             limpa_Tela
+                                   call             limpa_Tela
 
-    call             imprime_Tabuleiro
+                                   call             imprime_Tabuleiro
 
                                    call             posiciona_Navios_Aleatorio
 
@@ -981,7 +981,7 @@ posicona_Posicoes_Aleatorias proc                                               
 
     ;Se esta aqui eh pq estamos posicionando um hidroaviao
 
-      add              si,10                             ;Para voltar para ultima posicao posicionada
+                                   add              si,10                             ;Para voltar para ultima posicao posicionada
                                    add              si,11                             ;Para ir para a posicao que vai ser posicionada a ultima posicao do hidroaviao
 
     ;Verificar entorno para ver se eh possivel posicionar lá
@@ -1527,7 +1527,7 @@ tela_Intermediaria_Hidroaviao proc
                                    add              dl,3
                                    loop             loop_Desenha_Hidroaviao2
 
-                                   desenha_Quadrado 38,12
+                                   desenha_Quadrado 39,12
 
                                    move_XY          19,14
 
