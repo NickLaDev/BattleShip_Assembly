@@ -106,6 +106,7 @@ endm
     resultado_Sorteio_2        db ?
     posicao_Valida             db ?
     posicao_hidroaviao         db 0
+    eh_Hidroaviao              db 0
     ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------;
 .code
 
@@ -120,23 +121,24 @@ main proc
 
                                    move_XY          25,0                              ;Coloca o cursor no centro da tela
 
-                                   call             imprimir_Introducao               ;Imprime a introdução e fica travado até apertar alguma tecla
+    
+      call             imprimir_Introducao               ;Imprime a introdução e fica travado até apertar alguma tecla
 
-                                   call             limpa_Tela                        ;Limpa tela apos sair da proc de cima
+     call             limpa_Tela                        ;Limpa tela apos sair da proc de cima
 
-                                   call             pega_Nome                         ;Pega o nome do jogador
+    call             pega_Nome                         ;Pega o nome do jogador
 
-                                   call             limpa_Tela                        ;Limpa a tela
+    call             limpa_Tela                        ;Limpa a tela
 
-                                   call             Imprime_tabuleiro                 ;Começa a posiconar os navios
+    call             Imprime_tabuleiro                 ;Começa a posiconar os navios
 
-                                   call             posiciona_Navios
+    call             posiciona_Navios
 
-                                   call             tela_Posicionamento_Oponente
+    call             tela_Posicionamento_Oponente
 
-                                   call             limpa_Tela
+    call             limpa_Tela
 
-                                   call             imprime_Tabuleiro
+    call             imprime_Tabuleiro
 
                                    call             posiciona_Navios_Aleatorio
 
@@ -542,47 +544,37 @@ verifica_Posicao proc
                                    ret
     verifica_hidroaviao:           
 
+                                   cmp              cx,cx_inicial
+                                   je               liberado
+
                                    cmp              cx,1
-                                   jnz              continua
+                                   jne              continua
+
+                                   cmp              di,posicao_Anterior
+                                   jg               apos
 
                                    mov              bx,posicao_Anterior
-                                   sub              bx,11
-                                   cmp              di,bx
+                                   sub              bx,di
+
+                                   cmp              bx,9
                                    jz               posicao_Aprovada
 
-                                   add              bx,20
-                                   cmp              di,bx
+                                   cmp              bx,11
+                                   jz               posicao_Aprovada
+                                   jmp              posicao_Aprovada
+
+    apos:                          
+    
+                                   mov              bx,di
+                                   sub              bx,posicao_Anterior
+                                   
+                                
+                                   cmp              bx,9
                                    jz               posicao_Aprovada
 
-                                   mov              bx,posicao_Anterior
-                                   add              bx,9
-                                   cmp              di,BX
+                                   cmp              bx,11
                                    jz               posicao_Aprovada
-
-                                   add              bx,2
-                                   cmp              di,bx
-                                   jz               posicao_Aprovada
-
-                                   mov              bx,posicao_Anterior
-                                   sub              bx,9
-                                   cmp              di,BX
-                                   jz               posicao_Aprovada
-
-                                   sub              bx,2
-                                   cmp              di,bx
-                                   jz               posicao_Aprovada
-
-                                   mov              bx,posicao_Anterior
-                                   sub              bx,9
-                                   cmp              di,BX
-                                   jz               posicao_Aprovada
-
-                                   add              bx,20
-                                   cmp              di,BX
-                                   jz               posicao_Aprovada
-
-                                   pop_all
-                                   ret
+                                   jmp              posicao_Aprovada
 
 verifica_Posicao endp
 
@@ -847,14 +839,14 @@ posiciona_Navios proc
 
                                    mov              cx,3
                                    xor              dx,dx
-                                   mov              dx,34
+                                   mov              dx,23
     loop_desenha_hidroaviao:       
                                    desenha_Quadrado dl,3
                                    add              dx,3
                                    loop             loop_desenha_hidroaviao
 
                                    xor              dx,dx
-                                   mov              dx,37
+                                   mov              dx,26
 
                                    desenha_Quadrado dl,5
 
@@ -948,10 +940,10 @@ posicona_Posicoes_Aleatorias proc                                               
 
                                    mov              cx,cx_inicial
 
-                                   cmp              dx,0                              ;Cima
+                                   cmp              dx,0                              ;Vertical
                                    je               Vertical
 
-                                   cmp              dx,1                              ;Direita
+                                   cmp              dx,1                              ;Horizontal
                                    je               Horizontal
     Vertical:                      
 
@@ -973,7 +965,6 @@ posicona_Posicoes_Aleatorias proc                                               
                                    cmp              posicao_Valida,0
                                    jne              valido
 
-
                                    call             apaga_vertical
 
                                    jmp              inicio_Posiciona_Posicoes
@@ -984,6 +975,28 @@ posicona_Posicoes_Aleatorias proc                                               
                                    sub              si,10
                                  
                                    loop             verifica_posicao_concluida
+
+                                   cmp              eh_Hidroaviao,1
+                                   jne              fim_Total
+
+    ;Se esta aqui eh pq estamos posicionando um hidroaviao
+
+      add              si,10                             ;Para voltar para ultima posicao posicionada
+                                   add              si,11                             ;Para ir para a posicao que vai ser posicionada a ultima posicao do hidroaviao
+
+    ;Verificar entorno para ver se eh possivel posicionar lá
+                                   call             verifica_posicao_Hidroaviao
+
+                                   cmp              posicao_Valida,0
+                                   jne              hidro_Valido
+
+                                   call             apaga_Hidroaviao
+
+                                   jmp              inicio_Posiciona_Posicoes
+
+    hidro_Valido:                  
+
+                                   mov              byte ptr[si],1
                                  
                                    jmp              fim_Total
 
@@ -1031,7 +1044,62 @@ posicona_Posicoes_Aleatorias proc                                               
                                    ret
 posicona_Posicoes_Aleatorias endp
 
-apaga_horizontal proc                                                                 ; Problema está por aqui
+verifica_Posicao_Hidroaviao proc
+
+                                   push_all
+
+    ;SI esta na posicao que deveria ser inserido a ultima posicao do hidroaviao
+
+                                   xor              dx,dx
+                                   xor              bx,bx
+
+                                   mov              posicao_valida,1
+
+                                   mov              bx,si
+                                   sub              bx,9
+                                   add              dx,[bx]
+
+                                   add              bx,10
+                                   add              dx,[bx]
+
+                                   add              bx,10
+                                   add              dx,[bx]
+
+                                   cmp              dx,0
+                                   je               fim_Verifica_Hidro
+
+                                   mov              posicao_Valida,0
+
+    fim_Verifica_Hidro:            
+                                   pop_all
+                                   ret
+verifica_Posicao_Hidroaviao endp
+
+apaga_Hidroaviao proc                                                                 ;Apagar hidroaviao e tentar denovo
+
+                                   push_all
+
+                                   add              si,9
+                                   mov              byte ptr[si],0
+
+                                   sub              si,10
+                                   mov              byte ptr[si],0
+
+                                   sub              si,10
+                                   mov              byte ptr[si],0
+    ;Aqui já terminou de apagar o Hidroaviao
+    ;Agora tem que sortear denovo
+
+                                   call             sort_90                           ;Variavel lá ta com a posicao nova
+                                   mov              eh_Hidroaviao,1                   ;Garante que a variavel está falando que eh hidroaviao
+                                   mov              resultado_Sorteio_2,0             ;Garante que sera feito na vertical
+
+
+                                   pop_all
+                                   ret
+apaga_Hidroaviao endp
+
+apaga_horizontal proc
                                    push_all
 
     loop_apaga_Horizontal:         
@@ -1168,11 +1236,37 @@ posiciona_Navios_Aleatorio proc
 
                                    call             submarino_Aleatorio
 
-    ;call             tela_Intermediaria_Encourado
+                                   call             tela_Intermediaria_Hidroaviao
+
+                                   call             hidroaviao_Aleatorio
                                    
                                    pop_all
                                    ret
 posiciona_Navios_Aleatorio endp
+
+hidroaviao_Aleatorio proc
+
+                                   push_all
+
+                                   call             sort_90
+
+                                   mov              resultado_Sorteio_2,0             ;Para que ele seja na vertical
+
+                                   mov              eh_Hidroaviao,1                   ;Avisa para as proximas procs que agora sera posicionado um hidroaviao
+
+                                   mov              cx_inicial,3
+
+                                   xor              si,si
+
+                                   lea              si,matriz_Adversario
+
+                                   call             posicona_Posicoes_Aleatorias
+                                   pop_all
+
+
+
+                                   ret
+hidroaviao_Aleatorio endp
 
 encouracado_Aleatorio proc
                                    push_all
@@ -1407,6 +1501,51 @@ tela_Intermediaria_Submarino proc
 
                                    ret
 tela_Intermediaria_Submarino endp
+
+tela_Intermediaria_Hidroaviao proc
+
+                                   push_all
+
+                                   call             limpa_Tela
+
+                                   move_XY          13,7
+
+                                   lea              si,msgalhidroaviao
+                                   mov              bl,0ch
+                                   call             imprime_Letras
+
+                                   mov              bl,0fh
+
+                                   mov              cx,3
+                                   xor              dx,dx
+                                   mov              dx,36
+
+    loop_Desenha_Hidroaviao2:      
+
+                                   desenha_Quadrado dl,10
+
+                                   add              dl,3
+                                   loop             loop_Desenha_Hidroaviao2
+
+                                   desenha_Quadrado 38,12
+
+                                   move_XY          19,14
+
+                                   lea              si,msgposicaooponente5
+                                   mov              bl,0ch
+                                   add              bl,126
+                                   call             imprime_Letras
+
+                                   mov              ah,1
+                                   int              21h
+
+                                   
+
+                                   pop_all
+
+
+                                   ret
+tela_Intermediaria_Hidroaviao endp
 
     fim:                           
                                    mov              ah,4ch
