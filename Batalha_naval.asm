@@ -120,23 +120,23 @@ main proc
 
                                    move_XY          25,0                              ;Coloca o cursor no centro da tela
 
-    ; call             imprimir_Introducao               ;Imprime a introdução e fica travado até apertar alguma tecla
+                                   call             imprimir_Introducao               ;Imprime a introdução e fica travado até apertar alguma tecla
 
-    ; call             limpa_Tela                        ;Limpa tela apos sair da proc de cima
+                                   call             limpa_Tela                        ;Limpa tela apos sair da proc de cima
 
-    ; call             pega_Nome                         ;Pega o nome do jogador
+                                   call             pega_Nome                         ;Pega o nome do jogador
 
-    ; call             limpa_Tela                        ;Limpa a tela
+                                   call             limpa_Tela                        ;Limpa a tela
 
-    ;call             Imprime_tabuleiro                 ;Começa a posiconar os navios
+                                   call             Imprime_tabuleiro                 ;Começa a posiconar os navios
 
-    ; call             posiciona_Navios
+                                   call             posiciona_Navios
 
-    ; call             tela_Posicionamento_Oponente
+                                   call             tela_Posicionamento_Oponente
 
-    ; call             limpa_Tela
+                                   call             limpa_Tela
 
-    ; call             imprime_Tabuleiro
+                                   call             imprime_Tabuleiro
 
                                    call             posiciona_Navios_Aleatorio
 
@@ -549,9 +549,38 @@ verifica_Posicao proc
                                    sub              bx,11
                                    cmp              di,bx
                                    jz               posicao_Aprovada
+
                                    add              bx,20
                                    cmp              di,bx
                                    jz               posicao_Aprovada
+
+                                   mov              bx,posicao_Anterior
+                                   add              bx,9
+                                   cmp              di,BX
+                                   jz               posicao_Aprovada
+
+                                   add              bx,2
+                                   cmp              di,bx
+                                   jz               posicao_Aprovada
+
+                                   mov              bx,posicao_Anterior
+                                   sub              bx,9
+                                   cmp              di,BX
+                                   jz               posicao_Aprovada
+
+                                   sub              bx,2
+                                   cmp              di,bx
+                                   jz               posicao_Aprovada
+
+                                   mov              bx,posicao_Anterior
+                                   sub              bx,9
+                                   cmp              di,BX
+                                   jz               posicao_Aprovada
+
+                                   add              bx,20
+                                   cmp              di,BX
+                                   jz               posicao_Aprovada
+
                                    pop_all
                                    ret
 
