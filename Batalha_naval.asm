@@ -89,6 +89,16 @@ endm
     MSGINIATAQUE5                    DB "Finalmente, voce vera se ele acertou alguma embarcacao tambem$"
     MSGINIATAQUE6                    DB "Ganha quem derrubar todas as embarcacoes primeiro!$"
     MSGINIATAQUE7                    DB "BOA GUERRA!$"
+    MSGSUAVEZ                        DB "SUA VEZ DE ATACAR!$"
+    MSGATAQUE                        DB "Abaixo, digite a posicao que deseja atacar$"
+    MSGATAQUE2                       DB "Insira a posicao de ataque:$"
+    MSGACERTOU                       DB "Voce atingiu uma embarcacao!$"
+    MSGERROU                         DB "Voce errou o tiro!$"
+    MSGPCATAQUE                      DB "Vez do PC atacar!$"
+    MSGPCATAQUE2                     DB "A posicao ataca pelo pc foi:$"
+    MSGPCACERTOU                     DB "O PC acertou sua embarcacao!$"
+    MSGPCERROU                       DB "O PC errou o seu tiro!$"
+    MSGINVALIDOATAQUE                DB "Voce ja atacou essa posicao antes$"
     
     ;&=padrao estabelecido para quebra de linhas na funcao de imprir criada
     ;--------------------------------------Declaracao das matrizes que serao utilizadas como tabuleiro-------------------------------------------------------------------------------------;
@@ -119,6 +129,11 @@ endm
     contagem_Reposicionamentos       dw 0
     contagem_Reposicionamentos_Hidro dw 0
     reiniciar                        db 0
+    posicao_Ataque                   db ?,?
+    posicao_Ataque_Decifrada         db ?
+    deu_Errado                       db 0
+    ganhou                           db ?
+    primeira_Tentativa_Ataque        db 1
     ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------;
 .code
 
@@ -152,19 +167,22 @@ main proc
 
     ; call             imprime_Tabuleiro
 
-                                      call             posiciona_Navios_Aleatorio
+    ; call             posiciona_Navios_Aleatorio
 
-                                      lea              si,matriz_Adversario
+    ; lea              si,matriz_Adversario
 
-                                      call             imprime_Tabuleiro
+    ;  call             imprime_Tabuleiro
 
-                                      call             posiciona_Posicao
+    ;  call             posiciona_Posicao
 
-    ; call             limpa_Tela
+    ;  mov              ah,1
+    ;  int              21h
 
-    ; call             tela_Inicio_Ataque
+                                      call             limpa_Tela
 
-    ; call             ataque
+                                      call             tela_Inicio_Ataque
+
+                                      call             ataque
     
     ;---------------------------------FIM_DO_PROGRAMA--------------------------------------------------------------------------------------;
     
@@ -607,7 +625,7 @@ decifra_Posicao proc
                                       mul              byte ptr [si]                             ;Coluna conta como 10 posicoes
                             
                                       inc              si
-                                      sub              byte ptr [si],48                          ;Transforma o caracter do numero para apenas o numero
+                                      sub              byte ptr[si],48                           ;Transforma o caracter do numero para apenas o numero
 
                                       add              ax,[si]                                   ; Salva em AX a multipliacap de [si+1] com [si] (salvo em ax anteriormente)
 
@@ -1840,12 +1858,155 @@ tela_Inicio_Ataque endp
 ataque proc
                                       push_all
 
+                                      call             limpa_Tela
+
+                                      call             imprime_Tabuleiro
+
+                                      move_XY          30,1
+
+                                      lea              si,msgsuavez
+                                      mov              bl,0ch
+                                      call             imprime_Letras
+
+                                      move_XY          18,2
+
+                                      lea              si,msgataque
+                                      call             imprime_Letras
+
+                                      call             pega_Posicao_Ataque                       ;Pega a posicao e ja retorna ela decifrada
+
+                                      call             pega_Posicao_Ataque
 
                                       pop_all
 
                                       ret
 ataque endp
 
+pega_Posicao_Ataque proc
+
+                                      push_all
+                                      xor              dx,dx
+                                      xor              di,di
+                                      lea              di,posicao_Ataque
+                                      mov              byte ptr[di],0
+                                      inc              di
+                                      mov              byte ptr[di],0
+                                      mov              dl,2
+
+    inicio_Pega_Ataque:               
+
+                                      add              dl,3
+                                      mov              deu_Errado,0
+                                    
+                                      move_XY          3,dl
+                                      lea              si,msgataque2
+                                      mov              bl,0fh
+                                      call             imprime_Letras
+
+                                      inc              dl
+
+                                      move_XY          14,dl
+                                      mov              cx,2
+                                      xor              di,di
+                                      lea              di,posicao_Ataque
+    loop_Pega_Ataque:                 
+                                      mov              ah,1
+                                      int              21h                                       ;Esta em AL
+
+                                      mov              byte ptr[di],al
+                                      inc              di
+
+                                      loop             loop_Pega_Ataque
+    ;;
+                                      call             pula_Linha
+                                      
+                                      call             decifra_Posicao_Ataque
+
+                                      call             verifica_Posicao_Ataque                   ;Se verificar que esta errado, tem que fazer dnv
+
+                                      cmp              deu_Errado,1
+                                      je               inicio_Pega_Ataque
+
+                                      pop_all
+                                      ret
+pega_Posicao_Ataque endp
+
+decifra_Posicao_Ataque proc
+                                      push_all
+
+    ;cx com quantas vezes ja rdou
+                                      xor              ax,ax
+                                      mov              al,10                                     ;Coluna vale como 10 posicoes
+                            
+                                      lea              di, posicao_Ataque                        ;Passa o endereço da variavel
+                                      sub              byte ptr [di], 65                         ;Trasforma a letra para o numero corespondente da linha desejada
+                            
+                                      mul              byte ptr [di]                             ;Multiplica por 10                            ;Coluna conta como 10 posicoes
+                            
+                                      inc              di
+                                      sub              byte ptr [di],48                          ;Transforma o caracter do numero para apenas o numero
+
+                                      add              al,[di]                                   ; Salva em AX a multipliacap de [si+1] com [si] (salvo em ax anteriormente)
+    ; mov              ah,0
+                                    
+                                      mov              posicao_Ataque_Decifrada,al               ;Funcionando
+
+
+                                      pop_all
+                                      ret
+decifra_Posicao_Ataque endp
+
+verifica_Posicao_Ataque proc
+
+                                      push_all
+
+                                      xor              bx,bx
+                                      xor              ax,ax
+                                      mov              al,posicao_Ataque_Decifrada
+
+                                      lea              bx,matriz_Controle_Adversario
+                                      add              bx,ax
+
+                                      cmp              primeira_Tentativa_Ataque,1
+                                      je               primeiro_Ataque
+
+                                      cmp              byte ptr[bx],0
+                                      je               aprovada_Posicao_Ataque
+    ;Posicao que ja foi atacada anteriormente
+    ;Avisar que deu erro e pedir para apertar qqr tecla para tentar novamente
+
+    ;Pegar posicao do cursor
+
+                                      mov              ah,3
+                                      int              10h                                       ;DH esta com y do curso
+                                      add              dh,2
+
+
+                                      move_XY          5,5
+                                      lea              si,msginvalidoataque
+                                      mov              bl,0fh
+                                      call             imprime_Letras
+    ; Pegar denovo a posicao
+    ;E ja decifra a nova posicao
+                                      mov              deu_Errado,1
+                                      jmp              fim_Ataque
+                                   
+    aprovada_Posicao_Ataque:          
+
+                                      mov              byte ptr[bx],1
+
+    fim_Ataque:                       
+
+                                      pop_all
+                                      ret
+
+    primeiro_Ataque:                  
+                                      mov              byte ptr[bx],1
+                                      mov              primeira_Tentativa_Ataque,0
+                                      pop_all
+                                      ret
+
+verifica_Posicao_Ataque endp
 
     fim:                              
                                       mov              ah,4ch
