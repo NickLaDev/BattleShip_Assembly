@@ -714,7 +714,8 @@ imprime_Posicao proc
                                       xor              ax,ax
                                       xor              dx,dx                                     ;Limpa registradores
 
-                                      dec              cx
+                                      dec              cx                                        ; cx esta com a posicao da matriz
+                                      push             cx
                                       mov              al,cl
 
                                       mov              cl,10
@@ -750,6 +751,8 @@ imprime_Posicao proc
                                       mov              dl,"1"
                                       int              21h
 
+                                      pop              dx
+
                                       pop_all
 
 
@@ -757,8 +760,11 @@ imprime_Posicao proc
 
     posicao_de_ataque:                
     
-    
-                                      cmp              byte ptr [si],2
+                                      lea              si,matriz_Jogador
+                                      pop              cx
+                                      add              si,cx
+
+                                      cmp              byte ptr [si],2                           ;Verificar esse SI -> SI tem q ser offset matriz_Jogador + P ataque
                                       je               posicao_correta
 
                                       move_XY          bl,dl
@@ -1937,7 +1943,7 @@ tela_Inicio_Ataque proc
 tela_Inicio_Ataque endp
 
 ataque proc
-                                      push_all
+                                      push_all                                                   ;Loop ate exeder quantidade maxima de ataques
 
                                       call             sua_Vez
 
@@ -2052,7 +2058,7 @@ imrprime_Acertou_Errou proc
                                       je               imprimir_Acertou
     ;Se passou por aqui é pq eh pra imprimir as mensagens de quando erra
 
-                                      move_XY          7,dh
+                                      move_XY          3,dh
                                       add              dh,2
                                       lea              si,msgerrou
                                       mov              bl,0dh
@@ -2062,7 +2068,7 @@ imrprime_Acertou_Errou proc
 
     imprimir_Acertou:                                                                            ;Imprimir as msgs de quando acerta
 
-                                      move_XY          7,dh
+                                      move_XY          3,dh
                                       add              dh,2
                                       lea              si,msgacertou
                                       mov              bl,0dh
@@ -2092,6 +2098,8 @@ imprime_posicoes_atacadas proc
 
                                       xor              cx,cx
                                       mov              cx,0
+                                      xor              si,si
+                                      lea              si,matriz_Jogador
 
     roda_Matriz1:                     
 
@@ -2100,7 +2108,7 @@ imprime_posicoes_atacadas proc
                                       inc              cx
 
                                       xor              dx,dx
-                                      mov              dl,[si]
+                                      mov              dl,[si]                                   ;Veficiar esse SI - tem que ser o lea da matriz jogador
                                       inc              si
                                       cmp              dl,0
                                       je               roda_Matriz1                              ;-> virar call
@@ -2108,7 +2116,7 @@ imprime_posicoes_atacadas proc
                                       mov              imprime_posicao_ataque,1
                                       call             imprime_Posicao
 
-                                      jmp              roda_Matriz
+                                      jmp              roda_Matriz1
 
 
     fim_2:                            
