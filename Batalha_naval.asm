@@ -149,34 +149,34 @@ main proc
                                       move_XY          25,0                                      ;Coloca o cursor no centro da tela
 
     
-    ; call             imprimir_Introducao               ;Imprime a introdução e fica travado até apertar alguma tecla
+    ;call             imprimir_Introducao               ;Imprime a introdução e fica travado até apertar alguma tecla
 
     ;call             limpa_Tela                        ;Limpa tela apos sair da proc de cima
 
-    ; call             pega_Nome                         ;Pega o nome do jogador
+    ;call             pega_Nome                         ;Pega o nome do jogador
 
-    ; call             limpa_Tela                        ;Limpa a tela
+    ;call             limpa_Tela                        ;Limpa a tela
 
-    ; call             Imprime_tabuleiro                 ;Começa a posiconar os navios
+    ;call             Imprime_tabuleiro                 ;Começa a posiconar os navios
 
-    ; call             posiciona_Navios
+    ;call             posiciona_Navios
 
-    ;  call             tela_Posicionamento_Oponente
+    ;call             tela_Posicionamento_Oponente
 
-    ;  call             limpa_Tela
+    ;call             limpa_Tela
 
-    ; call             imprime_Tabuleiro
+    ;call             imprime_Tabuleiro
 
-    ; call             posiciona_Navios_Aleatorio
+    ;call             posiciona_Navios_Aleatorio
 
-    ; lea              si,matriz_Adversario
+    ;lea              si,matriz_Adversario
 
-    ;  call             imprime_Tabuleiro
+    ;call             imprime_Tabuleiro
 
-    ;  call             posiciona_Posicao
+    ;call             posiciona_Posicao
 
-    ;  mov              ah,1
-    ;  int              21h
+    ;mov              ah,1
+    ;int              21h
 
                                       call             limpa_Tela
 
@@ -895,7 +895,39 @@ posiciona_Navios proc
 
                                       call             limpa_Tela
 
-                                   
+                                      move_XY          24,1
+                                      lea              si,MSGHIDROAVIAO
+                                      mov              bl,0Fh
+ 
+                                      call             imprime_Letras
+                                      move_XY          14,2
+                                      lea              si,MSGLEMBRESE_HIDROAVIAO
+                                      mov              bl,0Fh
+                                      call             imprime_Letras
+
+                                      mov              cx,3
+                                      xor              dx,dx
+                                      mov              dx,23
+    loop_desenha_hidroaviao2:         
+                                      desenha_Quadrado dl,3
+                                      add              dx,3
+                                      loop             loop_desenha_hidroaviao2
+
+                                      xor              dx,dx
+                                      mov              dx,26
+
+                                      desenha_Quadrado dl,5
+
+                                      call             imprime_Tabuleiro
+                                      lea              si,matriz_Controle_Jogador
+                                      call             posiciona_Posicao
+
+                                      mov              posicao_hidroaviao,1
+                                      mov              cx,4
+                                      mov              cx_inicial,cx
+                                      call             pega_Posicao
+
+                                      call             limpa_Tela
     ; nss viado
     ;o mathias ta fazendo esse ???????
 
@@ -1779,12 +1811,12 @@ tela_Intermediaria_Hidroaviao proc
                                       xor              dx,dx
                                       mov              dx,36
 
-    loop_Desenha_Hidroaviao2:         
+    loop_Desenha_Hidroaviao3:         
 
                                       desenha_Quadrado dl,10
 
                                       add              dl,3
-                                      loop             loop_Desenha_Hidroaviao2
+                                      loop             loop_Desenha_Hidroaviao3
 
                                       desenha_Quadrado 39,12
 
