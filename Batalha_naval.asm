@@ -99,6 +99,8 @@ endm
     MSGPCACERTOU                     DB "O PC acertou sua embarcacao!$"
     MSGPCERROU                       DB "O PC errou o seu tiro!$"
     MSGINVALIDOATAQUE                DB "Voce ja atacou essa posicao antes$"
+    MSGPTECLA                        DB "Pressione qualquer tecla$"
+    MSGPTECLA2                       DB "Para continuar!$"
     
     ;&=padrao estabelecido para quebra de linhas na funcao de imprir criada
     ;--------------------------------------Declaracao das matrizes que serao utilizadas como tabuleiro-------------------------------------------------------------------------------------;
@@ -134,6 +136,8 @@ endm
     deu_Errado                       db 0
     ganhou                           db ?
     primeira_Tentativa_Ataque        db 1
+    acertou                          db 0
+    imprime_posicao_ataque           db 0
     ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------;
 .code
 
@@ -693,14 +697,13 @@ posiciona_Posicao endp
 
 imprime_Posicao proc
 
-
                                       push_all
 
                             
                                       xor              ax,ax
                                       xor              dx,dx                                     ;Limpa registradores
 
-                                      dec              cx
+                                      dec              cxz
                                       mov              al,cl
 
                                       mov              cl,10
@@ -725,6 +728,9 @@ imprime_Posicao proc
                                       add              dx,6
                                       add              bx,37
 
+                                      cmp              imprime_posicao_ataque,1
+                                      je               posicao_de_ataque
+
                                       move_XY          bl,dl
 
                                       xor              ax,ax
@@ -735,6 +741,34 @@ imprime_Posicao proc
 
                                       pop_all
 
+
+                                      ret
+
+    posicao_de_ataque:                
+    
+    
+                                      cmp              byte ptr [si],2
+                                      je               posicao_correta
+
+                                      move_XY          bl,dl
+
+                                      xor              ax,ax
+                                      mov              ah,2
+                                      xor              dx,dx
+                                      mov              dl,247
+                                      int              21h
+
+    posicao_correta:                  
+
+                                      move_XY          bl,dl
+
+                                      xor              ax,ax
+                                      mov              ah,2
+                                      xor              dx,dx
+                                      mov              dl,"X"
+                                      int              21h
+
+                                      pop_all
 
                                       ret
 
@@ -1890,24 +1924,11 @@ tela_Inicio_Ataque endp
 ataque proc
                                       push_all
 
+                                      call             sua_Vez
+
                                       call             limpa_Tela
 
-                                      call             imprime_Tabuleiro
-
-                                      move_XY          30,1
-
-                                      lea              si,msgsuavez
-                                      mov              bl,0ch
-                                      call             imprime_Letras
-
-                                      move_XY          18,2
-
-                                      lea              si,msgataque
-                                      call             imprime_Letras
-
-                                      call             pega_Posicao_Ataque                       ;Pega a posicao e ja retorna ela decifrada
-
-                                      call             pega_Posicao_Ataque
+                                      call             sua_Vez
 
                                       pop_all
 
@@ -1963,6 +1984,123 @@ pega_Posicao_Ataque proc
                                       ret
 pega_Posicao_Ataque endp
 
+sua_Vez proc
+
+                                      push_all
+
+                                      call             limpa_Tela
+
+                                      call             imprime_Tabuleiro
+
+                                      move_XY          30,1
+
+                                      lea              si,msgsuavez
+                                      mov              bl,0ch
+                                      call             imprime_Letras
+
+                                      move_XY          18,2
+
+                                      lea              si,msgataque
+                                      call             imprime_Letras
+
+                                      call             pega_Posicao_Ataque                       ;Pega a posicao e ja retorna ela decifrada
+
+                                      lea              si,matriz_Controle_Jogador                ;Onde posicionamos os barcos
+                                      lea              di,matriz_Jogador                         ;Posicoes atacadas
+
+                                      call             verifica_Se_Acertou
+
+                                      call             imrprime_Acertou_Errou
+
+                                      lea              si,matriz_Jogador
+                                      call             imprime_posicoes_atacadas
+
+                                      mov              ah,1
+                                      int              21h
+
+                                      pop_all
+
+                                      ret
+sua_Vez endp
+
+imrprime_Acertou_Errou proc
+
+                                      push_all
+
+    ;Tem que imprimir as mensagens se acertou ou erro o tiro
+
+                                      mov              ah,3
+                                      int              10h                                       ;DH contem a linha ( Y )
+    ;Dl contem a coluna ( X )
+                                      add              dh,2
+                                      cmp              acertou,1
+                                      je               imprimir_Acertou
+    ;Se passou por aqui é pq eh pra imprimir as mensagens de quando erra
+
+                                      move_XY          7,dh
+                                      add              dh,2
+                                      lea              si,msgerrou
+                                      mov              bl,0dh
+                                      call             imprime_Letras
+
+                                      jmp              fim_Impressao_Errado_Certo
+
+    imprimir_Acertou:                                                                            ;Imprimir as msgs de quando acerta
+
+                                      move_XY          7,dh
+                                      add              dh,2
+                                      lea              si,msgacertou
+                                      mov              bl,0dh
+                                      call             imprime_Letras
+
+    fim_Impressao_Errado_Certo:                                                                  ;Imprimir para digitar qualquer tecla
+
+                                      move_XY          5,dh
+                                      inc              dh
+                                      add              bl,127
+                                      lea              si,msgptecla
+                                      call             imprime_Letras
+                                      
+                                      move_XY          8,dh
+                                      lea              si,msgptecla2
+                                      call             imprime_Letras
+
+                                      mov              ah,1
+                                      int              21h
+
+                                      pop_all
+                                      ret
+imrprime_Acertou_Errou endp
+
+imprime_posicoes_atacadas proc
+                                      push_all
+
+                                      xor              cx,cx
+                                      mov              cx,0
+
+    roda_Matriz1:                     
+
+                                      cmp              cx,90
+                                      je               fim_2
+                                      inc              cx
+
+                                      xor              dx,dx
+                                      mov              dl,[si]
+                                      inc              si
+                                      cmp              dl,0
+                                      je               roda_Matriz1                              ;-> virar call
+
+                                      mov              imprime_posicao_ataque,1
+                                      call             imprime_Posicao
+
+                                      jmp              roda_Matriz
+
+
+    fim_2:                            
+                                      pop_all
+                                      ret
+imprime_posicoes_atacadas endp
+
 decifra_Posicao_Ataque proc
                                       push_all
 
@@ -1988,6 +2126,38 @@ decifra_Posicao_Ataque proc
                                       ret
 decifra_Posicao_Ataque endp
 
+verifica_Se_Acertou proc
+    ;Si esta com a matriz das posicoes
+    ;Di esta com a matriz das posicoes atacadas
+    ;Posicao ataque decifrada esta com o valor que deseja atacar
+                                      push_all
+
+                                      xor              bx,bx
+                                      xor              ax,ax
+                                      mov              al,posicao_Ataque_Decifrada
+
+                                      mov              bx,si
+                                      add              bx,ax                                     ;Agora bx esta na posicao que deseja atcar na matriz com as embarcacoes
+
+                                      add              di,ax
+
+                                      cmp              byte ptr[bx],1                            ;Se essa comparaçao der certo = Acertou um ataque
+                                      je               acertou_Posicao
+    ;Passou por aqui é pq errou
+                                      mov              acertou,0
+
+                                      jmp              errou_Posicao
+
+    acertou_Posicao:                                                                             ;Tem que colocar 2 na matriz das posicoes no lugar que acertou, alem de 2 na matriz de ataque
+                                      mov              acertou,1
+                                      mov              byte ptr[bx],2
+                                      mov              byte ptr[di],2                            ;Passa para as duas matrizes o valor na posicao atacada que acertou
+    errou_Posicao:                    
+                                      pop_all
+
+                                      ret
+verifica_Se_Acertou endp
+
 verifica_Posicao_Ataque proc
 
                                       push_all
@@ -1996,7 +2166,7 @@ verifica_Posicao_Ataque proc
                                       xor              ax,ax
                                       mov              al,posicao_Ataque_Decifrada
 
-                                      lea              bx,matriz_Controle_Adversario
+                                      lea              bx,matriz_Jogador
                                       add              bx,ax
 
                                       cmp              primeira_Tentativa_Ataque,1
