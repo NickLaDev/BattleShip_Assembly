@@ -182,6 +182,17 @@ main proc
     ;mov              ah,1
     ;int              21h
 
+                                      call             posiciona_Navios_Aleatorio
+
+                                      lea              si,matriz_Adversario
+
+                                      call             imprime_Tabuleiro
+
+                                      call             posiciona_Posicao
+
+                                      mov              ah,1
+                                      int              21h
+
                                       call             limpa_Tela
 
                                       call             tela_Inicio_Ataque
@@ -703,7 +714,7 @@ imprime_Posicao proc
                                       xor              ax,ax
                                       xor              dx,dx                                     ;Limpa registradores
 
-                                      dec              cxz
+                                      dec              cx
                                       mov              al,cl
 
                                       mov              cl,10
@@ -758,6 +769,8 @@ imprime_Posicao proc
                                       mov              dl,247
                                       int              21h
 
+                                      jmp              fim_3
+
     posicao_correta:                  
 
                                       move_XY          bl,dl
@@ -767,6 +780,8 @@ imprime_Posicao proc
                                       xor              dx,dx
                                       mov              dl,"X"
                                       int              21h
+
+    fim_3:                            
 
                                       pop_all
 
@@ -1926,7 +1941,7 @@ ataque proc
 
                                       call             sua_Vez
 
-                                      call             limpa_Tela
+    ;call             limpa_Tela
 
                                       call             sua_Vez
 
@@ -2005,7 +2020,7 @@ sua_Vez proc
 
                                       call             pega_Posicao_Ataque                       ;Pega a posicao e ja retorna ela decifrada
 
-                                      lea              si,matriz_Controle_Jogador                ;Onde posicionamos os barcos
+                                      lea              si,matriz_Adversario                      ;Onde posicionamos os barcos
                                       lea              di,matriz_Jogador                         ;Posicoes atacadas
 
                                       call             verifica_Se_Acertou
@@ -2136,7 +2151,7 @@ verifica_Se_Acertou proc
                                       xor              ax,ax
                                       mov              al,posicao_Ataque_Decifrada
 
-                                      mov              bx,si
+                                      lea              bx,matriz_Adversario
                                       add              bx,ax                                     ;Agora bx esta na posicao que deseja atcar na matriz com as embarcacoes
 
                                       add              di,ax
