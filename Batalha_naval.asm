@@ -101,6 +101,9 @@ endm
     MSGINVALIDOATAQUE                DB "Voce ja atacou essa posicao antes$"
     MSGPTECLA                        DB "Pressione qualquer tecla$"
     MSGPTECLA2                       DB "Para continuar!$"
+    MSGDERRUBOUSUBMARINO             db "Um submarino foi derrubado!$"
+    msgderruboufragata               db "Um fragata foi derrubado!$"
+    msgderrubouencouracado           db "Um encouracado foi derrubado!$"
     
     ;&=padrao estabelecido para quebra de linhas na funcao de imprir criada
     ;--------------------------------------Declaracao das matrizes que serao utilizadas como tabuleiro-------------------------------------------------------------------------------------;
@@ -142,6 +145,8 @@ endm
     acertos                          db 0
     primeira_Tentativa_Ataque_Al     db 1
     acertou_Al                       db 0
+    derrubou_navio                   db 0
+    posicoes_derrubadas              db ?
     ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------;
 .code
 
@@ -1939,7 +1944,6 @@ ataque proc
     loop_Ataque:                      
                                       call             sua_Vez
 
-                                      call             derrubou_embarcacao
 
                                       cmp              terminou,0
                                       jne              sai_Loop
@@ -1961,6 +1965,8 @@ ataque endp
 derrubou_embarcacao proc
                                       push_all
 
+                                      xor              bx,bx
+
                                       xor              cx,cx
                                       lea              si,matriz_Adversario
                                       mov              cx,90
@@ -1973,30 +1979,53 @@ derrubou_embarcacao proc
                                       loop             loop_verifica_derrubou
 
     uma_posicao_acertada:             
+                                      inc              bx
                                       inc              si
-                                      cmp              [si],2
+                                      cmp              byte ptr [si],2
                                       je               Horizontal2
 
-                                      sub              si,2
-                                      cmp              [si],2
-                                      je               Horizontal2
-
-                                      sub              si,9
-                                      cmp              [si],2
+                                      add              si,9
+                                      cmp              byte ptr [si],2
                                       je               Vertical2
 
-                                      add              si,20
-                                      cmp              [si],2
-                                      je               Vertical2
+                                      jmp              fim_derrubou_embarcacao
 
     Vertical2:                        
+                                      inc              bx
+                                      
+                                      sub              si,20
+                                      cmp              byte ptr [si],1
+                                      je               fim_derrubou_embarcacao
+
+                                      add              si,10
+    nao_terminou:                     
+                                      add              si,10
+
+                                      cmp              byte ptr [si],2
+                                      jne              verifica_derrubou
+
+                                      inc              bx
+
+                                      jmp              nao_terminou
+
+    verifica_derrubou:                
+
+                                      cmp              byte ptr [si],1
+                                      je               fim_derrubou_embarcacao
+
+                                      mov              derrubou_navio,1
+                                      mov              posicoes_derrubadas,bl
+                                      jmp              fim_derrubou_embarcacao
+
 
     Horizontal2:                      
 
+    fim_derrubou_embarcacao:          
+
                                       pop_all
                                       ret
-                                      pop_all
 derrubou_embarcacao endp
+
 vez_Do_Pc proc
 
                                       push_all
@@ -2177,6 +2206,8 @@ sua_Vez proc
 
                                       move_XY          0,0
 
+                                      call             derrubou_embarcacao
+
                                       call             imrprime_Acertou_Errou
 
 
@@ -2299,6 +2330,16 @@ imrprime_Acertou_Errou proc
                                       mov              bl,0dh
                                       call             imprime_Letras
 
+                                      cmp              derrubou_navio,0
+                                      je               fim_Impressao_Errado_Certo
+
+                                      call             verifica_embarcacao_derrubada
+
+                                      move_XY          3,dh
+                                      add              dh,2
+                                      mov              bl,0dh
+                                      call             imprime_Letras
+
     fim_Impressao_Errado_Certo:                                                                  ;Imprimir para digitar qualquer tecla
 
                                       move_XY          5,dh
@@ -2317,6 +2358,33 @@ imrprime_Acertou_Errou proc
                                       pop_all
                                       ret
 imrprime_Acertou_Errou endp
+
+verifica_embarcacao_derrubada proc
+
+                                      cmp              posicoes_derrubadas,2
+                                      je               derrubou_submarino
+
+                                      cmp              posicoes_derrubadas,3
+                                      je               derrubou_fragata
+
+                                      cmp              posicoes_derrubadas,4
+                                      je               derrubou_encouracado
+
+    derrubou_submarino:               
+                                      lea              si,MSGDERRUBOUSUBMARINO
+                                      jmp              fim_verifica_embarcacao_derrubada
+
+    derrubou_fragata:                 
+                                      lea              si,msgderruboufragata
+                                      jmp              fim_verifica_embarcacao_derrubada
+
+    derrubou_encouracado:             
+                                      lea              si,msgderrubouencouracado
+
+    fim_verifica_embarcacao_derrubada:
+
+                                      ret
+verifica_embarcacao_derrubada endp
 
 imrprime_Acertou_Errou_Al proc
 
@@ -2577,5 +2645,4 @@ verifica_Posicao_Ataque endp
 
 
 main endp
-
-    end main
+end main
