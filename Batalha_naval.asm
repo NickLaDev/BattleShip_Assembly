@@ -758,7 +758,7 @@ imprime_Posicao proc
                                       cmp              byte ptr [si],2                           ;Verificar esse SI -> SI tem q ser offset matriz_Jogador + P ataque
                                       je               posicao_correta
 
-                                      move_XY          bl,dl
+                                      move_XY          2,8
 
                                       xor              ax,ax
                                       mov              ah,2
@@ -770,7 +770,7 @@ imprime_Posicao proc
 
     posicao_correta:                  
 
-                                      move_XY          bl,dl
+                                      move_XY          2,8
 
                                       xor              ax,ax
                                       mov              ah,2
@@ -1939,6 +1939,8 @@ ataque proc
     loop_Ataque:                      
                                       call             sua_Vez
 
+                                      call             derrubou_embarcacao
+
                                       cmp              terminou,0
                                       jne              sai_Loop
 
@@ -1956,6 +1958,45 @@ ataque proc
 
 ataque endp
 
+derrubou_embarcacao proc
+                                      push_all
+
+                                      xor              cx,cx
+                                      lea              si,matriz_Adversario
+                                      mov              cx,90
+
+    loop_verifica_derrubou:           
+
+                                      cmp              byte ptr [si],2
+                                      je               uma_posicao_acertada
+
+                                      loop             loop_verifica_derrubou
+
+    uma_posicao_acertada:             
+                                      inc              si
+                                      cmp              [si],2
+                                      je               Horizontal2
+
+                                      sub              si,2
+                                      cmp              [si],2
+                                      je               Horizontal2
+
+                                      sub              si,9
+                                      cmp              [si],2
+                                      je               Vertical2
+
+                                      add              si,20
+                                      cmp              [si],2
+                                      je               Vertical2
+
+    Vertical2:                        
+
+    Horizontal2:                      
+
+                                      pop_all
+                                      ret
+                                      pop_all
+derrubou_embarcacao endp
 vez_Do_Pc proc
 
                                       push_all
@@ -1985,6 +2026,9 @@ vez_Do_Pc proc
                                       lea              di,matriz_Controle_Adversario             ;Posicoes atacadas
 
                                       call             verifica_Se_Acertou_Al                    ;OK
+
+                                      lea              si,matriz_Controle_Adversario
+                                      call             imprime_posicoes_atacadas_Al              ;Ok
 
                                       call             imrprime_Acertou_Errou_Al                 ;OK
 
@@ -2124,10 +2168,17 @@ sua_Vez proc
 
                                       call             verifica_Se_Acertou                       ;Ok
 
-                                      call             imrprime_Acertou_Errou
+                                      call             limpa_Tela
+
+                                      call             imprime_Tabuleiro
 
                                       lea              si,matriz_Jogador
                                       call             imprime_posicoes_atacadas
+
+                                      move_XY          0,0
+
+                                      call             imrprime_Acertou_Errou
+
 
     ; Verificar se derrubou um barco inteiro
     ;Verificar se atacou todas as posicoes
@@ -2283,7 +2334,7 @@ imrprime_Acertou_Errou_Al proc
 
                                       move_XY          3,dh
                                       add              dh,2
-                                      lea              si,msgerrou
+                                      lea              si,msgpcerrou
                                       mov              bl,0dh
                                       call             imprime_Letras
 
@@ -2293,7 +2344,7 @@ imrprime_Acertou_Errou_Al proc
 
                                       move_XY          3,dh
                                       add              dh,2
-                                      lea              si,msgacertou
+                                      lea              si,msgpcacertou
                                       mov              bl,0dh
                                       call             imprime_Letras
 
@@ -2526,4 +2577,5 @@ verifica_Posicao_Ataque endp
 
 
 main endp
+
     end main
