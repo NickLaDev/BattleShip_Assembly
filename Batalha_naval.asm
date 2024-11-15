@@ -138,6 +138,10 @@ endm
     primeira_Tentativa_Ataque        db 1
     acertou                          db 0
     imprime_posicao_ataque           db 0
+    terminou                         db 0
+    acertos                          db 0
+    primeira_Tentativa_Ataque_Al     db 1
+    acertou_Al                       db 0
     ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------;
 .code
 
@@ -153,34 +157,21 @@ main proc
                                       move_XY          25,0                                      ;Coloca o cursor no centro da tela
 
     
-    ;call             imprimir_Introducao               ;Imprime a introdução e fica travado até apertar alguma tecla
+                                      call             imprimir_Introducao                       ;Imprime a introdução e fica travado até apertar alguma tecla
 
-    ;call             limpa_Tela                        ;Limpa tela apos sair da proc de cima
+                                      call             limpa_Tela                                ;Limpa tela apos sair da proc de cima
 
-    ;call             pega_Nome                         ;Pega o nome do jogador
+                                      call             pega_Nome                                 ;Pega o nome do jogador
 
-    ;call             limpa_Tela                        ;Limpa a tela
+                                      call             limpa_Tela                                ;Limpa a tela
 
-    ;call             Imprime_tabuleiro                 ;Começa a posiconar os navios
+                                      call             Imprime_tabuleiro                         ;Começa a posiconar os navios
 
-    ;call             posiciona_Navios
+                                      call             posiciona_Navios
 
-    ;call             tela_Posicionamento_Oponente
+                                      call             tela_Posicionamento_Oponente
 
-    ;call             limpa_Tela
-
-    ;call             imprime_Tabuleiro
-
-    ;call             posiciona_Navios_Aleatorio
-
-    ;lea              si,matriz_Adversario
-
-    ;call             imprime_Tabuleiro
-
-    ;call             posiciona_Posicao
-
-    ;mov              ah,1
-    ;int              21h
+                                      call             limpa_Tela
 
                                       call             posiciona_Navios_Aleatorio
 
@@ -1945,16 +1936,116 @@ tela_Inicio_Ataque endp
 ataque proc
                                       push_all                                                   ;Loop ate exeder quantidade maxima de ataques
 
+    loop_Ataque:                      
                                       call             sua_Vez
 
-    ;call             limpa_Tela
+                                      cmp              terminou,0
+                                      jne              sai_Loop
 
-                                      call             sua_Vez
+                                      call             vez_Do_Pc
+
+                                      cmp              terminou,0
+                                      je               loop_Ataque
+
+
+    sai_Loop:                         
+                                      pop_all
+
+                                      ret
+
+
+ataque endp
+
+vez_Do_Pc proc
+
+                                      push_all
+
+                                      call             limpa_Tela
+
+                                      call             imprime_Tabuleiro
+
+                                      call             imprime_Posicoes_Atacadas                 ;Mudar si para Matriz_Controle_Adversario
+
+                                      move_XY          30,1
+
+                                      lea              si,msgpcataque
+                                      mov              bl,0ch
+                                      call             imprime_Letras
+
+                                      move_XY          18,2
+
+                                      call             sort_90
+
+    ;Posicao a ser atacada está na variavel
+
+                                      call             verifica_Ataque_Aleatorio                 ;ATé aqui esta ok
+
+
+                                      lea              si,matriz_Controle_Jogador                ;Onde posicionamos os barcos
+                                      lea              di,matriz_Controle_Adversario             ;Posicoes atacadas
+
+                                      call             verifica_Se_Acertou_Al                    ;OK
+
+                                      call             imrprime_Acertou_Errou_Al                 ;OK
+
+                                      lea              si,matriz_Controle_Adversario
+                                      call             imprime_posicoes_atacadas_Al              ;Ok
+
+                                      mov              ah,1
+                                      int              21h
+
+    ; Verificar se derrubou um barco inteiro
+    ;Verificar se atacou todas as posicoes
+                                      lea              si,matriz_Controle_Jogador
+                                      call             verifica_Acabou_Al
+
+
 
                                       pop_all
 
                                       ret
-ataque endp
+vez_Do_Pc endp
+
+verifica_Ataque_Aleatorio proc
+
+                                      push_all
+
+    inicio_Verifica_Al:               
+
+                                      xor              bx,bx
+                                      xor              ax,ax
+                                      mov              al,resultado_Sorteio_1
+
+                                      lea              bx,matriz_Controle_Adversario             ;Matriz que armazena as posicoes atacadas
+                                      add              bx,ax
+
+                                      cmp              primeira_Tentativa_Ataque_Al,1
+                                      je               primeiro_Ataque_Al
+
+                                      cmp              byte ptr[bx],0
+                                      je               aprovada_Posicao_Ataque_Al
+    ;Posicao que ja foi atacada anteriormente
+
+                                      call             sort_90
+                                    
+                                      jmp              inicio_Verifica_Al
+                                   
+    aprovada_Posicao_Ataque_Al:       
+
+                                      mov              byte ptr[bx],1
+
+    fim_Ataque_Al:                    
+
+                                      pop_all
+                                      ret
+
+    primeiro_Ataque_Al:               
+                                      mov              byte ptr[bx],1
+                                      mov              primeira_Tentativa_Ataque_Al,0
+                                      pop_all
+
+                                      ret
+verifica_Ataque_Aleatorio endp
 
 pega_Posicao_Ataque proc
 
@@ -2013,6 +2104,8 @@ sua_Vez proc
 
                                       call             imprime_Tabuleiro
 
+                                      call             imprime_Posicoes_Atacadas
+
                                       move_XY          30,1
 
                                       lea              si,msgsuavez
@@ -2029,20 +2122,101 @@ sua_Vez proc
                                       lea              si,matriz_Adversario                      ;Onde posicionamos os barcos
                                       lea              di,matriz_Jogador                         ;Posicoes atacadas
 
-                                      call             verifica_Se_Acertou
+                                      call             verifica_Se_Acertou                       ;Ok
 
                                       call             imrprime_Acertou_Errou
 
                                       lea              si,matriz_Jogador
                                       call             imprime_posicoes_atacadas
 
-                                      mov              ah,1
-                                      int              21h
+    ; Verificar se derrubou um barco inteiro
+    ;Verificar se atacou todas as posicoes
+                                      lea              si,matriz_Jogador
+                                      call             verifica_Acabou
 
                                       pop_all
 
                                       ret
 sua_Vez endp
+
+
+verifica_Acabou proc
+                                      push_all                                                   ;Si esta com a matriz que sera verificada
+                                      xor              cx,cx
+                                      mov              cx,0
+                                      xor              si,si
+                                      lea              si,matriz_Jogador
+                                      mov              acertos,0
+                                    
+
+    roda_Matriz_Acabou:               
+
+                                      cmp              cx,90
+                                      je               fim_Acabou
+                                      inc              cx
+
+                                      xor              dx,dx
+                                      mov              dl,[si]                                   ;Veficiar esse SI - tem que ser o lea da matriz jogador
+                                      inc              si
+                                      cmp              dl,2
+                                      jne              roda_Matriz_Acabou                        ;-> virar call
+    ;Se for igual
+                                      inc              acertos
+
+                                      jmp              roda_Matriz_Acabou
+
+
+    fim_Acabou:                       
+
+                                      cmp              acertos,19
+                                      jne              fim_Total_Acabou
+    ;Se for igual
+                                      mov              terminou,1
+
+
+    fim_Total_Acabou:                 
+                                      pop_All
+                                      ret
+Verifica_Acabou endp
+
+verifica_Acabou_Al proc
+                                      push_all                                                   ;Si esta com a matriz que sera verificada
+                                      xor              cx,cx
+                                      mov              cx,0
+                                      xor              si,si
+                                      lea              si,matriz_Controle_Adversario
+                                      mov              acertos,0
+                                    
+
+    roda_Matriz_Acabou_Al:            
+
+                                      cmp              cx,90
+                                      je               fim_Acabou_Al
+                                      inc              cx
+
+                                      xor              dx,dx
+                                      mov              dl,[si]                                   ;Veficiar esse SI - tem que ser o lea da matriz jogador
+                                      inc              si
+                                      cmp              dl,2
+                                      jne              roda_Matriz_Acabou_Al                     ;-> virar call
+    ;Se for igual
+                                      inc              acertos
+
+                                      jmp              roda_Matriz_Acabou_Al
+
+
+    fim_Acabou_Al:                    
+
+                                      cmp              acertos,19
+                                      jne              fim_Total_Acabou_Al
+    ;Se for igual
+                                      mov              terminou,1
+
+
+    fim_Total_Acabou_Al:              
+                                      pop_All
+                                      ret
+Verifica_Acabou_Al endp
 
 imrprime_Acertou_Errou proc
 
@@ -2093,6 +2267,56 @@ imrprime_Acertou_Errou proc
                                       ret
 imrprime_Acertou_Errou endp
 
+imrprime_Acertou_Errou_Al proc
+
+                                      push_all
+
+    ;Tem que imprimir as mensagens se acertou ou erro o tiro
+
+                                      mov              ah,3
+                                      int              10h                                       ;DH contem a linha ( Y )
+    ;Dl contem a coluna ( X )
+                                      add              dh,2
+                                      cmp              acertou_Al,1
+                                      je               imprimir_Acertou_Al
+    ;Se passou por aqui é pq eh pra imprimir as mensagens de quando erra
+
+                                      move_XY          3,dh
+                                      add              dh,2
+                                      lea              si,msgerrou
+                                      mov              bl,0dh
+                                      call             imprime_Letras
+
+                                      jmp              fim_Impressao_Errado_Certo_Al
+
+    imprimir_Acertou_Al:                                                                         ;Imprimir as msgs de quando acerta
+
+                                      move_XY          3,dh
+                                      add              dh,2
+                                      lea              si,msgacertou
+                                      mov              bl,0dh
+                                      call             imprime_Letras
+
+    fim_Impressao_Errado_Certo_Al:                                                               ;Imprimir para digitar qualquer tecla
+
+                                      move_XY          5,dh
+                                      inc              dh
+                                      add              bl,127
+                                      lea              si,msgptecla
+                                      call             imprime_Letras
+                                      
+                                      move_XY          8,dh
+                                      lea              si,msgptecla2
+                                      call             imprime_Letras
+
+                                      mov              ah,1
+                                      int              21h
+
+                                      pop_all
+                                      ret
+imrprime_Acertou_Errou_Al endp
+
+
 imprime_posicoes_atacadas proc
                                       push_all
 
@@ -2123,6 +2347,37 @@ imprime_posicoes_atacadas proc
                                       pop_all
                                       ret
 imprime_posicoes_atacadas endp
+
+imprime_posicoes_atacadas_Al proc
+                                      push_all
+
+                                      xor              cx,cx
+                                      mov              cx,0
+                                      xor              si,si
+                                      lea              si,matriz_controle_Adversario
+
+    roda_Matriz1_Al:                  
+
+                                      cmp              cx,90
+                                      je               fim_2_Al
+                                      inc              cx
+
+                                      xor              dx,dx
+                                      mov              dl,[si]                                   ;Veficiar esse SI - tem que ser o lea da matriz jogador
+                                      inc              si
+                                      cmp              dl,0
+                                      je               roda_Matriz1_Al                           ;-> virar call
+
+                                      mov              imprime_posicao_ataque,1
+                                      call             imprime_Posicao
+
+                                      jmp              roda_Matriz1_Al
+
+
+    fim_2_Al:                         
+                                      pop_all
+                                      ret
+imprime_posicoes_atacadas_Al endp
 
 decifra_Posicao_Ataque proc
                                       push_all
@@ -2180,6 +2435,38 @@ verifica_Se_Acertou proc
 
                                       ret
 verifica_Se_Acertou endp
+
+verifica_Se_Acertou_Al proc
+    ;Si esta com a matriz das posicoes
+    ;Di esta com a matriz das posicoes atacadas
+    ;Posicao ataque decifrada esta com o valor que deseja atacar
+                                      push_all
+
+                                      xor              bx,bx
+                                      xor              ax,ax
+                                      mov              al,Resultado_Sorteio_1
+
+                                      lea              bx,matriz_Controle_Jogador                ;Onde está os barcos
+                                      add              bx,ax                                     ;Agora bx esta na posicao que deseja atcar na matriz com as embarcacoes
+
+                                      add              di,ax
+
+                                      cmp              byte ptr[bx],1                            ;Se essa comparaçao der certo = Acertou um ataque
+                                      je               acertou_Posicao_Al
+    ;Passou por aqui é pq errou
+                                      mov              acertou_Al,0
+
+                                      jmp              errou_Posicao_Al
+
+    acertou_Posicao_Al:                                                                          ;Tem que colocar 2 na matriz das posicoes no lugar que acertou, alem de 2 na matriz de ataque
+                                      mov              acertou_Al,1
+                                      mov              byte ptr[bx],2
+                                      mov              byte ptr[di],2                            ;Passa para as duas matrizes o valor na posicao atacada que acertou
+    errou_Posicao_Al:                 
+                                      pop_all
+
+                                      ret
+verifica_Se_Acertou_Al endp
 
 verifica_Posicao_Ataque proc
 
